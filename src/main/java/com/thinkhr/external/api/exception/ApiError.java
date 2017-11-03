@@ -21,7 +21,7 @@ class APIError {
     private HttpStatus status;
     private String timestamp;
     private ErrorDetail errorDetail;
-    DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("YYYY-mm-dd");
+    DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("YYYY-MM-dd");
 
     private APIError() {
 		timestamp = LocalDateTime.now().format(datePattern);

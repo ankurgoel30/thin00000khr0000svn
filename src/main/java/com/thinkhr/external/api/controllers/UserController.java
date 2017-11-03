@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.thinkhr.external.api.db.entities.User;
+import com.thinkhr.external.api.exception.APIBadRequest;
 import com.thinkhr.external.api.repositories.UserRepository;
 
 /**
@@ -57,6 +58,9 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN_USER') or hasAuthority('STANDARD_USER')")
     public ResponseEntity<User> getById(@PathVariable(name="id",value = "id") Long id) throws Exception {
         User user = userRepo.findOne(id);
+        if (user == null) {
+        	throw new APIBadRequest("user does not exist with id " + id);
+        }
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
     

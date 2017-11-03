@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
@@ -36,6 +37,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  *
  */
 @ControllerAdvice
+@RestController
 public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
