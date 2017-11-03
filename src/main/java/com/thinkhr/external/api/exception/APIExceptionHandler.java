@@ -20,7 +20,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.thinkhr.external.api.resource.error.ApplicationMessageHandler;
+import com.thinkhr.external.api.resource.ApplicationMessageHandler;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -164,7 +164,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
      * @return
      */
     private ResponseEntity<Object> buildResponseEntity(APIError apiError) {
-        return new ResponseEntity<>(apiError, apiError.getStatus().value());
+        return new ResponseEntity<Object>(apiError, apiError.getStatus());
     }
 
     

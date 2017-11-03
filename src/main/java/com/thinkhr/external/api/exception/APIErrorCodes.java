@@ -1,6 +1,6 @@
 package com.thinkhr.external.api.exception;
 
-import com.thinkhr.external.api.resource.error.ApplicationMessageHandler;
+import com.thinkhr.external.api.resource.ApplicationMessageHandler;
 
 /**
  * To make an API's error uniquely identifiable by its error code.
