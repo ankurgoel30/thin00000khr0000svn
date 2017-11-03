@@ -1,5 +1,7 @@
 package com.thinkhr.external.api.controllers;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -51,9 +53,9 @@ public class UserController {
      * @return User object
      * 
      */
-    @GetMapping("users/{id}")
+    @GetMapping("/users/{id}")
     @PreAuthorize("hasAuthority('ADMIN_USER') or hasAuthority('STANDARD_USER')")
-    public ResponseEntity<User> getById(@PathVariable(name="id",value = "id") Long id) {
+    public ResponseEntity<User> getById(@PathVariable(name="id",value = "id") Long id) throws Exception {
         User user = userRepo.findOne(id);
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
@@ -65,7 +67,7 @@ public class UserController {
      * @return null
      * 
      */
-    @PostMapping("users")
+    @PostMapping("/users")
     @PreAuthorize("hasAuthority('ADMIN_USER')")
     public ResponseEntity<Void> create(@RequestBody User user, UriComponentsBuilder builder) {
         userRepo.save(user);
