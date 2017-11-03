@@ -13,7 +13,8 @@ public enum APIErrorCodes {
 	
 	UNAUTHORIZED_USER(1),
 	ARGUMENT_TYPE_MISMATCH(2),
-	MEDIA_NOT_SUPPORTED(3);
+	MEDIA_NOT_SUPPORTED(3),
+	ENTITY_NOT_FOUND(4);
 	
     private final String code;
 
