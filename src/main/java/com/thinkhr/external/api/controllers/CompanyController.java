@@ -2,6 +2,8 @@ package com.thinkhr.external.api.controllers;
 
 import java.util.List;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thinkhr.external.api.db.entities.Company;
+import com.thinkhr.external.api.model.CompanyModel;
 import com.thinkhr.external.api.services.CompanyService;
 
 
@@ -19,7 +22,7 @@ import com.thinkhr.external.api.services.CompanyService;
  * 
  */
 @RestController
-@RequestMapping(path="/v1")
+@RequestMapping(path="/v1/companies")
 public class CompanyController {
 	
     @Autowired
@@ -30,8 +33,8 @@ public class CompanyController {
      * @return List<Company>
      * 
      */
-    @RequestMapping(method=RequestMethod.GET,value="/clients")
-    List<Company> getAllCompany() {
+    @RequestMapping(method=RequestMethod.GET)
+    List<CompanyModel> getAllCompany() {
         return companyService.getAllCompany();
     }
     
@@ -41,28 +44,31 @@ public class CompanyController {
      * @return Company object
      * 
      */
-    @RequestMapping(method=RequestMethod.GET,value="clients/{clientId}")
-    public Company getById(@PathVariable(name="clientId",value = "clientId") Long clientId) {
-        Company company = companyService.getCompany(clientId);
+    @RequestMapping(method=RequestMethod.GET,value="/{companyId}")
+    public Company getById(@PathVariable(name="companyId",value = "companyId") Long companyId) {
+        Company company = companyService.getCompany(companyId);
+        if (company == null) {
+        	throw new EntityNotFoundException();
+        }
         return company;
     }
     
     
     /**
      * Delete specific company from system
-     * @param clientId
+     * @param companyId
      */
-    @RequestMapping(method=RequestMethod.DELETE,value="clients/{clientId}")
-    public void deleteCompany(@PathVariable(name="clientId",value = "clientId") Long clientId) {
-    	companyService.deleteCompany(clientId);
+    @RequestMapping(method=RequestMethod.DELETE,value="/{companyId}")
+    public void deleteCompany(@PathVariable(name="companyId",value = "companyId") Long companyId) {
+    	companyService.deleteCompany(companyId);
     }
     
     
     /**
      * Update a company in system
-     * @param Company object
+     * @param CompanyModel object
      */
-    @RequestMapping(method=RequestMethod.PUT,value = "/clients")
+    @RequestMapping(method=RequestMethod.PUT)
 	public void updateCompany(@RequestBody Company company) {
     	companyService.updateCompany(company);
 	}
@@ -72,7 +78,7 @@ public class CompanyController {
      * Add a company in system
      * @param Company object
      */
-    @RequestMapping(method=RequestMethod.POST,value = "/clients")
+    @RequestMapping(method=RequestMethod.POST)
    	public void addCompany(@RequestBody Company Company) {
     	companyService.addCompany(Company);
    	}

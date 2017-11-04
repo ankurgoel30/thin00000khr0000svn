@@ -1,6 +1,6 @@
 package com.thinkhr.external.api.controllers;
 
-import javax.persistence.EntityNotFoundException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.thinkhr.external.api.db.entities.User;
-import com.thinkhr.external.api.exception.APIBadRequest;
+import com.thinkhr.external.api.exception.ApplicationException;
+import com.thinkhr.external.api.exception.APIErrorCodes;
+import com.thinkhr.external.api.model.UserModel;
 import com.thinkhr.external.api.repositories.UserRepository;
+import com.thinkhr.external.api.services.UserService;
 
 /**
  * User Controller for performing operations
@@ -29,11 +32,14 @@ import com.thinkhr.external.api.repositories.UserRepository;
  * 
  */
 @RestController
-@RequestMapping(path="/v1")
+@RequestMapping(path="/v1/users")
 public class UserController {
 	
     @Autowired
     UserRepository userRepo;
+    
+    @Autowired
+    UserService userService;
     
     /**
      * Get all users from repository
@@ -41,11 +47,11 @@ public class UserController {
      * 
      */
 
-    @GetMapping(path="/users")
+    @GetMapping
     @PreAuthorize("hasAuthority('ADMIN_USER')")
     public @ResponseBody
-    Iterable<User> getAllUsers() {
-        return userRepo.findAll();
+    List<UserModel> getAllUsers() {
+        return userService.getAllUser();
     }
     
     /**
@@ -54,12 +60,12 @@ public class UserController {
      * @return User object
      * 
      */
-    @GetMapping("/users/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN_USER') or hasAuthority('STANDARD_USER')")
     public ResponseEntity<User> getById(@PathVariable(name="id",value = "id") Long id) throws Exception {
         User user = userRepo.findOne(id);
         if (user == null) {
-        	throw new APIBadRequest("user does not exist with id " + id);
+        	throw new ApplicationException(APIErrorCodes.ENTITY_NOT_FOUND, "user" , "id="+id); 
         }
         return new ResponseEntity<User>(user, HttpStatus.OK);
     }
@@ -71,7 +77,7 @@ public class UserController {
      * @return null
      * 
      */
-    @PostMapping("/users")
+    @PostMapping
     @PreAuthorize("hasAuthority('ADMIN_USER')")
     public ResponseEntity<Void> create(@RequestBody User user, UriComponentsBuilder builder) {
         userRepo.save(user);

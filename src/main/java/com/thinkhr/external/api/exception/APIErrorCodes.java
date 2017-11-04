@@ -1,6 +1,6 @@
 package com.thinkhr.external.api.exception;
 
-import com.thinkhr.external.api.resource.ApplicationMessageHandler;
+import lombok.Getter;
 
 /**
  * To make an API's error uniquely identifiable by its error code.
@@ -11,29 +11,21 @@ import com.thinkhr.external.api.resource.ApplicationMessageHandler;
  */
 public enum APIErrorCodes {
 	
-	UNAUTHORIZED_USER(1),
-	ARGUMENT_TYPE_MISMATCH(2),
-	MEDIA_NOT_SUPPORTED(3),
-	ENTITY_NOT_FOUND(4);
+	VALIDATION_FAILED(1000),
+	REQUIRED_PARAMETER(1000),
+	UNAUTHORIZED_USER(1001),
+	ARGUMENT_TYPE_MISMATCH(1002),
+	MEDIA_NOT_SUPPORTED(1003),
+	ENTITY_NOT_FOUND(1004),
+	MALFORMED_JSON_REQUEST(1000),
+	ERROR_WRITING_JSON_OUTPUT(1005),
+	DATABASE_ERROR(1006);
 	
-    private final String code;
+	@Getter
+    private final Integer code;
 
-    APIErrorCodes(int intCode) {
-        this.code = Integer.toString(intCode);
-    }
-
-    /**
-     * @return
-     */
-    public String getCode() {
-        return this.code;
-    }
-    
-    /**
-     * @return
-     */
-    public String getMsg() {
-        return ApplicationMessageHandler.getErrorMessage(this.name());
+    APIErrorCodes(Integer intCode) {
+        this.code = intCode;
     }
 
 }
