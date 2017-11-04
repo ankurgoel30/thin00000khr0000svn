@@ -2,15 +2,14 @@ package com.thinkhr.external.api.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.thinkhr.external.api.db.entities.Company;
-import com.thinkhr.external.api.db.entities.User;
+import com.thinkhr.external.api.model.CompanyModel;
 import com.thinkhr.external.api.repositories.CompanyRepository;
-import com.thinkhr.external.api.repositories.UserRepository;
 
 /*
 * The UserService2 class provides a collection of all
@@ -20,7 +19,7 @@ import com.thinkhr.external.api.repositories.UserRepository;
 */
 
 @Service
-public class CompanyService  {
+public class CompanyService  extends CommonService {
 	
     @Autowired
     private CompanyRepository companyRepository;
@@ -29,10 +28,10 @@ public class CompanyService  {
      * Fetch all companies from system
      * @return List<Company> object 
      */
-    public List<Company> getAllCompany() {
+    public List<CompanyModel> getAllCompany() {
 		List<Company> companies = new ArrayList<Company>();
 		companyRepository.findAll().forEach(c -> companies.add(c));
-		return companies;
+		return companies.stream().map(c -> { return (CompanyModel) convert(c, CompanyModel.class); }).collect(Collectors.toList());
 	}
     
     /**
@@ -48,7 +47,7 @@ public class CompanyService  {
     
     /**
      * Add a company in system
-     * @param Company object
+     * @param CompanyModel object
      */
     public void addCompany(Company company)  {
     	companyRepository.save(company);
@@ -56,7 +55,7 @@ public class CompanyService  {
     
     /**
      * Update a company in system
-     * @param Company object
+     * @param CompanyModel object
      */
     public void updateCompany(Company company)  {
     	companyRepository.save(company);

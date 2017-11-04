@@ -1,8 +1,12 @@
 package com.thinkhr.external.api.exception;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,18 +19,8 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import com.thinkhr.external.api.resource.ApplicationMessageHandler;
-
-import javax.servlet.http.HttpServletRequest;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * This class is exception handler to wrap all the exceptions from API, prepare a Response object 
@@ -40,6 +34,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RestController
 public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
+	@Autowired
+	ErrorMessageResourceHandler resourceHandler;
+	
     /**
      * Handle MissingServletRequestParameterException. Triggered when a 'required' request parameter is missing.
      *
@@ -53,8 +50,9 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMissingServletRequestParameter(
             MissingServletRequestParameterException ex, HttpHeaders headers,
             HttpStatus status, WebRequest request) {
-        String error = ex.getParameterName() + " parameter is missing";
-        return buildResponseEntity(new APIError(BAD_REQUEST, error, ex));
+    	APIError apiError = new APIError(BAD_REQUEST, ex);
+    	apiError.setMessage(getMessageFromResourceBundle(APIErrorCodes.REQUIRED_PARAMETER, ex.getParameterName()));
+        return buildResponseEntity(apiError);
     }
 
 
@@ -73,9 +71,12 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers,
             HttpStatus status,
             WebRequest request) {
-        //TODO: Add implementation
-    	String errorMessage = APIErrorCodes.MEDIA_NOT_SUPPORTED.getMsg();
-        return buildResponseEntity(new APIError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, errorMessage, ex));
+    	APIError apiError = new APIError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex);
+    	StringBuilder builder = new StringBuilder();
+        ex.getSupportedMediaTypes().forEach(t -> builder.append(t).append(", "));
+    	apiError.setMessage(getMessageFromResourceBundle(APIErrorCodes.REQUIRED_PARAMETER, 
+    			ex.getContentType().toString(), builder.toString()));
+        return buildResponseEntity(apiError);
     }
 
     /**
@@ -93,11 +94,12 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers,
             HttpStatus status,
             WebRequest request) {
-        //TODO: Add implementation
-        APIError APIError = new APIError(BAD_REQUEST);
-        return buildResponseEntity(APIError);
+	    APIError apiError = new APIError(BAD_REQUEST, APIErrorCodes.VALIDATION_FAILED);
+	    apiError.setMessage(resourceHandler.get(APIErrorCodes.VALIDATION_FAILED.name()));
+        apiError.addErrorDetail(ex.getBindingResult().getFieldErrors());
+        return buildResponseEntity(apiError);
     }
-
+            
     /**
      * Handles javax.validation.ConstraintViolationException. Thrown when @Validated fails.
      *
@@ -107,9 +109,9 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(javax.validation.ConstraintViolationException.class)
     protected ResponseEntity<Object> handleConstraintViolation(
             javax.validation.ConstraintViolationException ex) {
-        //TODO: Add implementation
-        APIError APIError = new APIError(BAD_REQUEST);
-        return buildResponseEntity(APIError);
+	    APIError apiError = new APIError(BAD_REQUEST, APIErrorCodes.VALIDATION_FAILED, ex);
+	    apiError.setMessage(resourceHandler.get(APIErrorCodes.VALIDATION_FAILED.name()));
+        return buildResponseEntity(apiError);
     }
 
     /**
@@ -124,9 +126,9 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, 
     		HttpHeaders headers, HttpStatus status, WebRequest request) {
-        //TODO: Add implementation
-        String error = "Malformed JSON request";
-        return buildResponseEntity(new APIError(HttpStatus.BAD_REQUEST, error, ex));
+	    APIError apiError = new APIError(BAD_REQUEST, APIErrorCodes.MALFORMED_JSON_REQUEST, ex);
+	    apiError.setMessage(resourceHandler.get(APIErrorCodes.MALFORMED_JSON_REQUEST.name()));
+        return buildResponseEntity(apiError);
     }
 
     /**
@@ -141,24 +143,42 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotWritable(HttpMessageNotWritableException ex,
     		HttpHeaders headers, HttpStatus status, WebRequest request) {
-        //TODO: Add implementation
-        String error = "Error writing JSON output";
-        return buildResponseEntity(new APIError(HttpStatus.INTERNAL_SERVER_ERROR, error, ex));
+	    APIError apiError = new APIError(HttpStatus.INTERNAL_SERVER_ERROR, APIErrorCodes.ERROR_WRITING_JSON_OUTPUT, ex);
+	    apiError.setMessage(resourceHandler.get(APIErrorCodes.ERROR_WRITING_JSON_OUTPUT.name()));
+        return buildResponseEntity(apiError);
     }
-
+    
     /**
-     * Handle Exception, handle generic APIBadRequest.class
+     * Handle Exception, handle generic ApplicationException.class
      *
      * @param ex the Exception
      * @return the APIError object
      */
-    @ExceptionHandler(APIBadRequest.class)
-    protected ResponseEntity<Object> handleAPIBadRequest(APIBadRequest ex) {
-        //TODO: Add Implementation
-    	APIError APIError = new APIError(BAD_REQUEST, ex);
-        return buildResponseEntity(APIError);
+    @ExceptionHandler(ApplicationException.class)
+    protected ResponseEntity<Object> handleAPIBadRequest(ApplicationException ex) {
+    	APIError apiError = new APIError(ex.getHttpStatus(), ex.getApiErrorCode());
+    	apiError.setMessage(getMessageFromResourceBundle(ex.getApiErrorCode(), ex.getErrorMessageParameters()));
+        return buildResponseEntity(apiError);
     }
 
+    /**
+     * Handle DataIntegrityViolationException, inspects the cause for different DB causes.
+     *
+     * @param ex the DataIntegrityViolationException
+     * @return the ApiError object
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    protected ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex,
+                                                                  WebRequest request) {
+    	APIError apiError = null;
+        if (ex.getCause() instanceof ConstraintViolationException) {
+        	apiError = new APIError(HttpStatus.CONFLICT, APIErrorCodes.DATABASE_ERROR, ex.getCause());
+    	    apiError.setMessage(resourceHandler.get(APIErrorCodes.DATABASE_ERROR.name()));
+        } else {
+        	apiError = new APIError(HttpStatus.INTERNAL_SERVER_ERROR, ex);
+        }
+        return buildResponseEntity(apiError);
+    }
 
     /**
      * Build Resposne entity for the given error message;
@@ -167,6 +187,45 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
      */
     private ResponseEntity<Object> buildResponseEntity(APIError apiError) {
         return new ResponseEntity<Object>(apiError, apiError.getStatus());
+    }
+    
+    
+    /**
+     * Prepare error message for the apiErrorCode from resource bundle
+     * It will replace all dynamic arguments from error message by paramList values 
+     * E.g. 
+     *   '{0}' is a required parameter and paramList = userName then output of method will be as 
+     *   'userName' is a required parameter.
+     * @param apiErrorCode
+     * @param paramList
+     */
+    public String getMessageFromResourceBundle(APIErrorCodes apiErrorCode, String...paramList) {
+
+        String errorMessage = resourceHandler.get(apiErrorCode.name());
+        if(paramList != null && paramList.length > 0) {
+          Pattern pattern = Pattern.compile("\\{(\\d+)([^\\}.]*)\\.\\.(n?)(\\d*)\\}", Pattern.DOTALL);
+          Matcher matcher = pattern.matcher(errorMessage);
+          if ( matcher.find() ) {
+            int offset = Integer.parseInt(matcher.group(1));
+            String sep = matcher.group(2);
+            int length = ("n".equals(matcher.group(3))?paramList.length:Math.min(paramList.length,Integer.parseInt(matcher.group(4))-offset+1));
+            StringBuilder sb = new StringBuilder();
+            for (int i=offset; i<length+offset; i++) {
+              if (i > offset) {
+                sb.append(sep);
+              }
+              sb.append("{").append(i).append("}");
+            }
+            errorMessage = matcher.replaceAll(sb.toString());
+          }
+          //It will replace "{0}, {1},{2}... {n}" number of parameter from error message
+          for (int i=0; i<paramList.length; i++) {
+            String param = paramList[i];
+            errorMessage = errorMessage.replace("{"+i+"}", param);
+          }
+        }
+        
+        return errorMessage;
     }
 
     
