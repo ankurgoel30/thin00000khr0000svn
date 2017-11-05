@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
- * A starting point for Spring application
+ * Main class for Spring Boot based API applciation.
  * 
  * @author Surabhi Bhawsar
  * @since 2017-11-01
@@ -19,7 +19,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 public class ApiApplication {
 	
 	/**
-	 * main method for spring application
+	 * Main method for spring application
+	 * 
 	 * @param args command line arguments passed to app
 	 * 
 	 */
@@ -28,7 +29,9 @@ public class ApiApplication {
 	}
 	
 	/**
-	 * @return
+	 * Facilitates messageSoruce
+	 * 
+	 * @return MessageSource
 	 */
 	@Bean
 	public MessageSource messageSource () {
@@ -38,7 +41,9 @@ public class ApiApplication {
 	}
 	
 	/**
-	 * @return
+	 * ModelMapper object for interchanging model and entities
+	 * 
+	 * @return ModelMapper
 	 */
 	@Bean
 	public ModelMapper modelMapper() {

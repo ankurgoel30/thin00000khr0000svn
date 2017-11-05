@@ -15,6 +15,17 @@ import javax.validation.constraints.Max;
 
 import lombok.Data;
 
+/**
+ * 
+ * Database entity object for Company
+ * 
+ * Name of database table is clients
+ * 
+ * @author Ajay Jain
+ * @since 2017-11-05
+ *
+ */
+
 @Entity
 @Table(name = "clients")
 @Data
@@ -22,17 +33,16 @@ public class Company {
 	@Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     @Column(name = "clientID") 
-	private Integer clientId;
+	private Integer companyId;
 	
 	@Column(name = "search_help") 
 	private String searchHelp;
 		
 	@Column(name = "Client_Type") 
-	@Max(20)
-	private String clientType;
+	private String companyType;
 	
 	@Column(name = "Client_Name") 
-	private String clientName;
+	private String companyName;
 	
 	@Column(name = "display_name") 
 	private String displayName;
@@ -44,32 +54,32 @@ public class Company {
 	private Integer broker;
 	
 	@Column(name = "Client_Phone") 
-	private String clientPhone;
+	private String companyPhone;
 	
 	@Column(name = "Website") 
 	private String website;
 	
 	@Column(name = "Client_Since",nullable=false) 
 	@Temporal(TemporalType.DATE)
-	private Date clientSince = new Date();
+	private Date companySince = new Date();
 	
 	@Column(name = "tempID") 
 	private String tempID;
 	
 	@Column(name = "Client_Status") 
-	private Integer clientStatus;
+	private Integer companyStatus;
 	
 	@Column(name = "enhanced_password") 
 	private Integer enhancedPassword;
 	
 	@Column(name = "client_hours") 
-	private String clientHours;
+	private String companyHours;
 	
 	@Column(name = "issuesBroker") 
 	private Integer issuesBroker;
 	
 	@Column(name = "issuesClient") 
-	private Integer issuesClient;
+	private Integer issuesCompany;
 	
 	@Column(name = "issue_frequency") 
 	private Integer issueFrequency;
@@ -83,14 +93,11 @@ public class Company {
 	@Column(name = "actualCompanySize") 
 	private Integer actualCompanySize;
 	
-	@Column(name = "companyType") 
-	private String companyType;
-	
 	@Column(name = "salesNotes") 
 	private String salesNotes;
 	
 	@Column(name = "customClient") 
-	private Integer customClient;
+	private Integer customCompany;
 	
 	@Column(name = "groupID") 
 	private String groupID;
@@ -151,7 +158,7 @@ public class Company {
 	private String officeLocation;
 	
 	@Column(name = "partnerClientType") 
-	private String partnerClientType;
+	private String partnerCompanyType;
 	
 	@Column(name = "marketID") 
 	private Integer marketID;
@@ -258,7 +265,7 @@ public class Company {
 	private Integer workplaceUsers;
 	
 	@Column(name = "temp_Client_Status") 
-	private Integer tempClientStatus;
+	private Integer tempCompanyStatus;
 	
 	@Column(name = "Renewal_Date") 
 	private Date renewalDate;

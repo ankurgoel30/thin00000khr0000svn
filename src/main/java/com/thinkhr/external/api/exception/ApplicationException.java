@@ -6,6 +6,8 @@ import lombok.Data;
 
 /**
  * Custom exception class to handle exception those are related with Application
+ * 
+ * 
  * @author Surabhi Bhawsar
  * @since 2017-11-03
  *
@@ -19,6 +21,7 @@ public class ApplicationException extends Exception {
     private HttpStatus httpStatus;
     
 	/**
+	 * TODO 
 	 * @param msg
 	 */
 	public ApplicationException(String msg) {
@@ -26,6 +29,8 @@ public class ApplicationException extends Exception {
 	}
 
     /**
+     * TODO
+     * 
      * @param errorCode
      * @param params
      */
@@ -35,6 +40,7 @@ public class ApplicationException extends Exception {
     }
     
     /**
+     * TODO
      * @param errorCode
      * @param params
      * @param httpStatus
@@ -45,6 +51,7 @@ public class ApplicationException extends Exception {
     }
 
     /**
+     * TODO
      * @param errorCode
      * @param params
      * @return
@@ -56,6 +63,8 @@ public class ApplicationException extends Exception {
     }
     
     /**
+     * TODO
+     * 
      * @param errorCode
      * @param params
      * @return
@@ -67,6 +76,7 @@ public class ApplicationException extends Exception {
     }
     
     /**
+     * TODO
      * @param errorCode
      * @param params
      * @return

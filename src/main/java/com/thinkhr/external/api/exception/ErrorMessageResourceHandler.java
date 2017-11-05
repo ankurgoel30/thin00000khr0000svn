@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Helper to simplify accessing i18n messages in code.
- * 
- * This finds messages automatically found from src/main/resources (files named errors_*.properties)
+ * This finds messages automatically found from 
+ * src/main/resources (files named errors_*.properties)
  * 
  *
  * @author Surabhi Bhawsar
@@ -25,12 +25,20 @@ public class ErrorMessageResourceHandler {
     private MessageSource messageSource;
 
     private MessageSourceAccessor accessor;
-
+    
+    /**
+     * TODO
+     */
     @PostConstruct
     private void init() {
         accessor = new MessageSourceAccessor(messageSource, Locale.ENGLISH);
     }
-
+    
+    /**
+     * TODO
+     * @param code
+     * @return
+     */
     public String get(String code) {
         return accessor.getMessage(code);
     }

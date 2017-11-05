@@ -11,9 +11,13 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.model.CompanyModel;
 import com.thinkhr.external.api.repositories.CompanyRepository;
 
-/*
-* The UserService2 class provides a collection of all
-* services related with users
+/**
+*
+* Provides a collection of all services related with Company
+* database object
+*
+* @author Surabhi Bhawsar
+* @Since 2017-11-04
 *
 * 
 */
@@ -25,7 +29,8 @@ public class CompanyService  extends CommonService {
     private CompanyRepository companyRepository;
 
     /**
-     * Fetch all companies from system
+     * Fetch all companies from database
+     * 
      * @return List<Company> object 
      */
     public List<CompanyModel> getAllCompany() {
@@ -35,39 +40,47 @@ public class CompanyService  extends CommonService {
 	}
     
     /**
-     * Fetch specific company from system
-     * @param clientId
+     * Fetch specific company from database
+     * 
+     * @param companyId
      * @return Company object 
      */
-    public Company getCompany(int clientId) {
+    public CompanyModel getCompany(int companyId) {
     	Company company = null;
-    	company = companyRepository.findOne(clientId);
-    	return company;
+    	company = companyRepository.findOne(companyId);
+    	return (null != company ? (CompanyModel) convert(company, CompanyModel.class) : null);    
     }
     
     /**
-     * Add a company in system
+     * Add a company in database
+     * 
      * @param CompanyModel object
      */
-    public Integer addCompany(CompanyModel companyModel)  {
+    public CompanyModel addCompany(CompanyModel companyModel)  {
 		Company company = (Company)convert(companyModel, Company.class);
     	companyRepository.save(company);
-    	return company.getClientId();
+    	return (CompanyModel) convert(company, CompanyModel.class);
     }
     
     /**
-     * Update a company in system
+     * Update a company in database
+     * 
      * @param CompanyModel object
      */
-    public void updateCompany(Company company)  {
+    public CompanyModel updateCompany(CompanyModel companyModel)  {
+		Company company = (Company)convert(companyModel, Company.class);
     	companyRepository.save(company);
+    	return (CompanyModel) convert(company, CompanyModel.class);
+
     }
     
     /**
-     * Delete specific company from system
-     * @param clientId
+     * Delete specific company from database
+     * 
+     * @param companyId
      */
-    public void deleteCompany(int clientId)  {
-    	companyRepository.delete(clientId);
+    public int deleteCompany(int companyId)  {
+    	companyRepository.delete(companyId);
+    	return companyId;
     }
 }
