@@ -11,12 +11,13 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Max;
 
 import lombok.Data;
 
 @Entity
-@Data
 @Table(name = "clients")
+@Data
 public class Company {
 	@Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -25,8 +26,9 @@ public class Company {
 	
 	@Column(name = "search_help") 
 	private String searchHelp;
-	
+		
 	@Column(name = "Client_Type") 
+	@Max(20)
 	private String clientType;
 	
 	@Column(name = "Client_Name") 

@@ -1,7 +1,15 @@
 package com.thinkhr.external.api.model;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
+
+import javax.validation.constraints.Min;
+
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.sun.istack.internal.NotNull;
 
 import lombok.Data;
 
@@ -11,14 +19,20 @@ import lombok.Data;
  *
  */
 @Data
-public class CompanyModel {
+public class CompanyModel implements Serializable {
 	private Integer clientId;
 	private String searchHelp;
 	private String clientType;
+	
+	@NotNull
+	@NotEmpty
+	@Length(max=20)
 	private String clientName;
+	
 	private String displayName;
 	private String aspect;
-	private int broker;
+	@Min(value=0)
+	private Integer broker;
 	private String clientPhone;
 	private String website;
 	private Date clientSince;

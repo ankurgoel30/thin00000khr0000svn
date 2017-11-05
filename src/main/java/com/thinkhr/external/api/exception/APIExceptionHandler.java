@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.JDBCException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -179,6 +180,21 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
         }
         return buildResponseEntity(apiError);
     }
+    
+    /**
+     * Handle JDBC Exception, inspects the cause for different DB causes.
+     *
+     * @param ex the JDBCException
+     * @return the ApiError object
+     */
+    @ExceptionHandler(JDBCException.class)
+    protected ResponseEntity<Object> handleDatabaseException(JDBCException ex,
+                                                                  WebRequest request) {
+    	APIError apiError = new APIError(HttpStatus.INTERNAL_SERVER_ERROR, APIErrorCodes.DATABASE_ERROR, ex);
+	    apiError.setMessage(resourceHandler.get(APIErrorCodes.DATABASE_ERROR.name()));
+        return buildResponseEntity(apiError);
+    }
+
 
     /**
      * Build Resposne entity for the given error message;
