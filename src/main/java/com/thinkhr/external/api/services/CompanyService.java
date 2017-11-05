@@ -49,8 +49,10 @@ public class CompanyService  extends CommonService {
      * Add a company in system
      * @param CompanyModel object
      */
-    public void addCompany(Company company)  {
+    public Integer addCompany(CompanyModel companyModel)  {
+		Company company = (Company)convert(companyModel, Company.class);
     	companyRepository.save(company);
+    	return company.getClientId();
     }
     
     /**
