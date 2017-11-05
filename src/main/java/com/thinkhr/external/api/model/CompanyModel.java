@@ -12,7 +12,7 @@ import lombok.Data;
  */
 @Data
 public class CompanyModel {
-	private Long clientId;
+	private Integer clientId;
 	private String searchHelp;
 	private String clientType;
 	private String clientName;
