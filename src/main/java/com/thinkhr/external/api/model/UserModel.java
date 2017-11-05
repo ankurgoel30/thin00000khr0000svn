@@ -7,6 +7,8 @@ import com.thinkhr.external.api.db.entities.Role;
 import lombok.Data;
 
 /**
+ * User Model is a user facing POJO object for
+ * User entity.
  * 
  * @author Surabhi Bhawsar
  * @since 2017-11-04

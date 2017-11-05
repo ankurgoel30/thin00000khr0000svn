@@ -4,9 +4,10 @@ import lombok.Data;
 import javax.persistence.*;
 
 /**
- * A role object model.
+ * Database entity object for Role.
  * 
  * @author sbhawsar
+ * @since 2017-11-05
  * 
  */
 

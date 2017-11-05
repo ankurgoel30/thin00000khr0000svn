@@ -24,11 +24,15 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
- * This class is exception handler to wrap all the exceptions from API, prepare a Response object 
- * having all the required exception details so user can understand the message and take an action to 
- * fix error with the API.
+ * This class is a single global exception handler component wrapping for all 
+ * the exceptions from APIs, prepare a Response object with required exception 
+ * details sending back to users.
+ * 
+ * @ControllerAdvice 
+ * @RestController
  * @author Surabhi Bhawsar
  * @since   2017-11-02
+ * 
  *
  */
 @ControllerAdvice
@@ -39,7 +43,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 	ErrorMessageResourceHandler resourceHandler;
 	
     /**
-     * Handle MissingServletRequestParameterException. Triggered when a 'required' request parameter is missing.
+     * Handle MissingServletRequestParameterException when a 'required' request parameter is missing.
      *
      * @param ex      MissingServletRequestParameterException
      * @param headers HttpHeaders
@@ -49,8 +53,10 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @Override
     protected ResponseEntity<Object> handleMissingServletRequestParameter(
-            MissingServletRequestParameterException ex, HttpHeaders headers,
-            HttpStatus status, WebRequest request) {
+            MissingServletRequestParameterException ex, 
+            HttpHeaders headers,
+            HttpStatus status, 
+            WebRequest request) {
     	APIError apiError = new APIError(BAD_REQUEST, ex);
     	apiError.setMessage(getMessageFromResourceBundle(APIErrorCodes.REQUIRED_PARAMETER, ex.getParameterName()));
         return buildResponseEntity(apiError);
@@ -58,7 +64,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
 
     /**
-     * Handle HttpMediaTypeNotSupportedException. This one triggers when JSON is invalid as well.
+     * Handle HttpMediaTypeNotSupportedException when request JSON is invalid.
      *
      * @param ex      HttpMediaTypeNotSupportedException
      * @param headers HttpHeaders
@@ -81,7 +87,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Handle MethodArgumentNotValidException. Triggered when an object fails @Valid validation.
+     * Handle MethodArgumentNotValidException an object fails @Valid validation.
      *
      * @param ex      the MethodArgumentNotValidException that is thrown when @Valid validation fails
      * @param headers HttpHeaders
@@ -198,6 +204,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
      * Build Resposne entity for the given error message;
+     * 
      * @param apiError
      * @return
      */

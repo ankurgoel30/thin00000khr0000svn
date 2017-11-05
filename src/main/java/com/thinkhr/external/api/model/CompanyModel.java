@@ -6,49 +6,49 @@ import java.util.Date;
 
 import javax.validation.constraints.Min;
 
+import lombok.Data;
+
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.sun.istack.internal.NotNull;
-
-import lombok.Data;
-
 /**
+ * Company Model is a user facing POJO object for
+ * Company entity.
+ * 
  * @author Surabhi Bhawsar
  * @since 2017-11-04
  *
  */
 @Data
 public class CompanyModel implements Serializable {
-	private Integer clientId;
+
+	private Integer companyId;
 	private String searchHelp;
-	private String clientType;
-	
-	@NotNull
+	private String companyType;
+
 	@NotEmpty
 	@Length(max=20)
-	private String clientName;
+	private String companyName;
 	
 	private String displayName;
 	private String aspect;
 	@Min(value=0)
 	private Integer broker;
-	private String clientPhone;
+	private String companyPhone;
 	private String website;
-	private Date clientSince;
+	private Date companySince;
 	private String tempID;
-	private int clientStatus;
+	private int companyStatus;
 	private int enhancedPassword;
-	private String clientHours;
+	private String companyHours;
 	private int issuesBroker;
-	private int issuesClient;
+	private int issuescompany;
 	private int issueFrequency;
 	private String industry;
 	private String companySize;
 	private int actualCompanySize;
-	private String companyType;
 	private String salesNotes;
-	private int customClient;
+	private int customCompany;
 	private String groupID;
 	private Date deactivationDate;
 	private int deactivationID;
@@ -68,7 +68,7 @@ public class CompanyModel implements Serializable {
 	private int newsletterID;
 	private int newsletterPrivateLabel;
 	private String officeLocation;
-	private String partnerClientType;
+	private String partnercompanyType;
 	private int marketID;
 	private String marketCode;
 	private Timestamp suspended;
@@ -103,7 +103,7 @@ public class CompanyModel implements Serializable {
 	private int directLanding;
 	private String revenue;
 	private int workplaceUsers;
-	private int tempClientStatus;
+	private int tempcompanyStatus;
 	private Date renewalDate;
 	private int reManager;
 	private int partnerManager;

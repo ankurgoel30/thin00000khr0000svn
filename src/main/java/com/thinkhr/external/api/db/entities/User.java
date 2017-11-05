@@ -18,9 +18,10 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
- * A user object model
+ * Database entity object for User
  * 
  * @author sbhawsar
+ * @since 2017-11-05
  * 
  */
 
