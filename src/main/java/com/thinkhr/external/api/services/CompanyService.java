@@ -39,7 +39,7 @@ public class CompanyService  extends CommonService {
      * @param clientId
      * @return Company object 
      */
-    public Company getCompany(long clientId) {
+    public Company getCompany(int clientId) {
     	Company company = null;
     	company = companyRepository.findOne(clientId);
     	return company;
@@ -65,7 +65,7 @@ public class CompanyService  extends CommonService {
      * Delete specific company from system
      * @param clientId
      */
-    public void deleteCompany(long clientId)  {
+    public void deleteCompany(int clientId)  {
     	companyRepository.delete(clientId);
     }
 }

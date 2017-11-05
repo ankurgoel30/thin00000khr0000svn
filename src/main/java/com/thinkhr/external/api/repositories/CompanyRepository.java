@@ -13,5 +13,5 @@ import com.thinkhr.external.api.db.entities.Company;
  *
  */
 
-public interface CompanyRepository extends CrudRepository<Company, Long> {
+public interface CompanyRepository extends CrudRepository<Company, Integer> {
 }
