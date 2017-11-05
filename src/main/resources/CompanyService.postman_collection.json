@@ -32,7 +32,7 @@
 					"enabled": true
 				}
 			],
-			"url": "http://localhost:8080/v1/clients/2",
+			"url": "http://localhost:8080/v1/companies/2",
 			"queryParams": [],
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -44,7 +44,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1509856905125,
+			"time": 1509866898083,
 			"name": "Get a Company",
 			"description": "",
 			"collectionId": "b6b5e116-78b8-f2c3-d150-8cd3702a6805",
@@ -68,7 +68,7 @@
 					"enabled": true
 				}
 			],
-			"url": "http://localhost:8080/v1/clients",
+			"url": "http://localhost:8080/v1/companies",
 			"queryParams": [],
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -80,7 +80,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1509856914318,
+			"time": 1509866904610,
 			"name": "Create a Company",
 			"description": "",
 			"collectionId": "b6b5e116-78b8-f2c3-d150-8cd3702a6805",
@@ -104,7 +104,7 @@
 					"enabled": true
 				}
 			],
-			"url": "http://localhost:8080/v1/clients",
+			"url": "http://localhost:8080/v1/companies",
 			"queryParams": [],
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -116,7 +116,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1509856901560,
+			"time": 1509866888861,
 			"name": "Get All Companies",
 			"description": "",
 			"collectionId": "b6b5e116-78b8-f2c3-d150-8cd3702a6805",
@@ -140,7 +140,7 @@
 					"enabled": true
 				}
 			],
-			"url": "http://localhost:8080/v1/clients/1",
+			"url": "http://localhost:8080/v1/companies/1",
 			"queryParams": [],
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -152,7 +152,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1509856923959,
+			"time": 1509866914426,
 			"name": "Delete a Company",
 			"description": "",
 			"collectionId": "b6b5e116-78b8-f2c3-d150-8cd3702a6805",
@@ -176,7 +176,7 @@
 					"enabled": true
 				}
 			],
-			"url": "http://localhost:8080/v1/clients",
+			"url": "http://localhost:8080/v1/companies",
 			"queryParams": [],
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -188,7 +188,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1509856920119,
+			"time": 1509866909169,
 			"name": "Edit a Company",
 			"description": "",
 			"collectionId": "b6b5e116-78b8-f2c3-d150-8cd3702a6805",

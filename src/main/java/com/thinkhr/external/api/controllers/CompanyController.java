@@ -45,7 +45,7 @@ public class CompanyController {
      * 
      */
     @RequestMapping(method=RequestMethod.GET,value="/{companyId}")
-    public Company getById(@PathVariable(name="companyId",value = "companyId") Long companyId) {
+    public Company getById(@PathVariable(name="companyId",value = "companyId") Integer companyId) {
         Company company = companyService.getCompany(companyId);
         if (company == null) {
         	throw new EntityNotFoundException();
@@ -59,7 +59,7 @@ public class CompanyController {
      * @param companyId
      */
     @RequestMapping(method=RequestMethod.DELETE,value="/{companyId}")
-    public void deleteCompany(@PathVariable(name="companyId",value = "companyId") Long companyId) {
+    public void deleteCompany(@PathVariable(name="companyId",value = "companyId") Integer companyId) {
     	companyService.deleteCompany(companyId);
     }
     
