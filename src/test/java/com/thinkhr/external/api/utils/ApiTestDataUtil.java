@@ -46,7 +46,9 @@ public class ApiTestDataUtil {
 	 */
 	public static Company createCompany(Integer companyId, String companyName, String companyType, String displayName) {
 		Company company = new Company();
-		company.setCompanyId(companyId);
+		if (companyId != null) {
+			company.setCompanyId(companyId);
+		}
 		company.setCompanyName(companyName);
 		company.setCompanyType(companyType);
 		company.setDisplayName(displayName);
