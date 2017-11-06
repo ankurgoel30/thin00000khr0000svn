@@ -45,7 +45,7 @@ public class CompanyService  extends CommonService {
      * @param companyId
      * @return Company object 
      */
-    public CompanyModel getCompany(int companyId) {
+    public CompanyModel getCompany(Integer companyId) {
     	Company company = null;
     	company = companyRepository.findOne(companyId);
     	return (null != company ? (CompanyModel) convert(company, CompanyModel.class) : null);    
