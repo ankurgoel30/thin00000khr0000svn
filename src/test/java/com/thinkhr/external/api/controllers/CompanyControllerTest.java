@@ -1,26 +1,26 @@
 package com.thinkhr.external.api.controllers;
 
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_BASE_PATH;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyIdResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyModel;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.*;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyResponseEntity;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.getJsonString;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -28,7 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -43,10 +43,9 @@ import com.thinkhr.external.api.model.CompanyModel;
  * @since 2017-11-06
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ApiApplication.class)
 @SpringBootTest
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CompanyControllerTest {
 
 	private MockMvc mockMvc;
@@ -68,7 +67,7 @@ public class CompanyControllerTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void verifyAllCompanyList() throws Exception {
+	public void testAllCompany() throws Exception {
 
 		CompanyModel companyModel = createCompanyModel(); 
 
@@ -88,7 +87,7 @@ public class CompanyControllerTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void getCompanyById() throws Exception {
+	public void testGetCompanyById() throws Exception {
 		CompanyModel companyModel = createCompanyModel(); 
 		
 		given(companyController.getById(companyModel.getCompanyId())).willReturn(companyModel);
@@ -127,14 +126,13 @@ public class CompanyControllerTest {
 	 */
 	@Test
 	public void testUpdateCompany() throws Exception {
-		//TODO: Need to understand why it is breaking.
 		CompanyModel companyModel = createCompanyModel(); 
 		
-		ResponseEntity<CompanyModel> responseEntity = createCompanyResponseEntity(companyModel, HttpStatus.CREATED);
+		ResponseEntity<CompanyModel> responseEntity = createCompanyResponseEntity(companyModel, HttpStatus.OK);
 		
 		given(companyController.updateCompany(companyModel)).willReturn(responseEntity);
 
-		mockMvc.perform(put(COMPANY_API_BASE_PATH + companyModel.getCompanyId())
+		mockMvc.perform(put(COMPANY_API_BASE_PATH+companyModel.getCompanyId())
 				.accept(MediaType.APPLICATION_JSON)
 				.contentType(MediaType.APPLICATION_JSON)
 		        .content(getJsonString(companyModel)))
