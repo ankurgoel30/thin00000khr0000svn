@@ -4,6 +4,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import lombok.Data;
+
 /**
  * Common Service to hold all general operations
  * 
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
  *
  */
 @Service
+@Data
 public class CommonService {
 
     @Autowired

@@ -42,7 +42,7 @@ public class CompanyController {
      * 
      */
     @RequestMapping(method=RequestMethod.GET)
-    List<CompanyModel> getAllCompany() {
+    public List<CompanyModel> getAllCompany() {
         return companyService.getAllCompany();
     }
     
@@ -95,7 +95,7 @@ public class CompanyController {
      * @param Company object
      */
     @RequestMapping(method=RequestMethod.POST)
-   	public ResponseEntity<CompanyModel> addCompany(@Valid @RequestBody CompanyModel companyModel,  UriComponentsBuilder builder) {
+   	public ResponseEntity<CompanyModel> addCompany(@Valid @RequestBody CompanyModel companyModel) {
     	CompanyModel company = companyService.addCompany(companyModel);
         return new ResponseEntity<CompanyModel>(company, HttpStatus.CREATED);
    	}
