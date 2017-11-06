@@ -1,10 +1,5 @@
-FROM openjdk:8-jre
+FROM java:8
+EXPOSE 8085
+ADD target/api-0.1.jar api-0.1.jar
+ENTRYPOINT ["java", "-jar", "api-0.1.jar"]
 
-EXPOSE 8080
-
-RUN mkdir -p /var/opt/api/logs
-
-COPY ./target/api-0.0.1-SNAPSHOT.jar /var/opt/api
-WORKDIR /var/opt/api
-
-ENTRYPOINT java -jar api-0.0.1-SNAPSHOT.jar

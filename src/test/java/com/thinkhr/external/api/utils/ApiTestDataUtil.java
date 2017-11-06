@@ -13,6 +13,7 @@ import com.thinkhr.external.api.model.CompanyModel;
 
 /**
  * Utility class to keep all utilities required for Junits
+ * 
  * @author Surabhi Bhawsar
  * @Since 2017-11-06
  *
@@ -24,6 +25,7 @@ public class ApiTestDataUtil {
 	
 	/**
 	 * Convert object into Json String
+	 * 
 	 * @param object
 	 * @param kclass
 	 * @return
@@ -38,6 +40,8 @@ public class ApiTestDataUtil {
 	
 
 	/**
+	 * Create a Company Model for given inputs
+	 * 
 	 * @param companyId
 	 * @param companyName
 	 * @param companyType
@@ -56,6 +60,8 @@ public class ApiTestDataUtil {
 	}
 	
 	/**
+	 * Creates a company response object
+	 * 
 	 * @param company
 	 * @param httpStatus
 	 * @return
@@ -65,6 +71,8 @@ public class ApiTestDataUtil {
 	}
 	
 	/**
+	 * createCompanyIdResponseEntity
+	 * 
 	 * @param companyId
 	 * @param httpStatus
 	 * @return
@@ -74,6 +82,8 @@ public class ApiTestDataUtil {
 	}
 
 	/**
+	 * Create Model object for Company
+	 * 
 	 * @return
 	 */
 	public static CompanyModel createCompanyModel() {
@@ -86,6 +96,8 @@ public class ApiTestDataUtil {
 	}
 
 	/**
+	 * Create Model object for Company
+	 *
 	 * @param companyId
 	 * @param companyName
 	 * @param companyType

@@ -38,6 +38,7 @@ import com.thinkhr.external.api.model.CompanyModel;
 
 /**
  * Junit class to test all the methods\APIs written for CompanyController
+ * 
  * @author Surabhi Bhawsar
  * @since 2017-11-06
  *
@@ -87,7 +88,7 @@ public class CompanyControllerTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void getArrivalsById() throws Exception {
+	public void getCompanyById() throws Exception {
 		CompanyModel companyModel = createCompanyModel(); 
 		
 		given(companyController.getById(companyModel.getCompanyId())).willReturn(companyModel);

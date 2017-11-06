@@ -5,7 +5,8 @@ import java.util.Locale;
 import lombok.Data;
 
 /**
- * To get resources from message bundle files
+ * To manage resources from message bundle files
+ * 
  * @author Surabhi Bhawsar
  * @since 2017-11-03
  *
