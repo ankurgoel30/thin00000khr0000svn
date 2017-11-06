@@ -23,6 +23,7 @@ import com.thinkhr.external.api.model.CompanyModel;
 import com.thinkhr.external.api.repositories.CompanyRepository;
 
 /**
+ * Junit to test all the methods of CompanyService.
  * @author Surabhi Bhawsar
  * @since 2017-11-06
  *
@@ -43,6 +44,9 @@ public class CompanyServiceTest {
 		companyService.setModelMapper(new ModelMapper());
 	}
 	
+	/**
+	 * To verify getAllCompany method
+	 */
 	@Test
 	public void testGetAllCompany(){
 		List<Company> toDoList = new ArrayList<Company>();
@@ -55,8 +59,11 @@ public class CompanyServiceTest {
 		assertEquals(3, result.size());
 	}
 	
+	/**
+	 * To verify createCompany method
+	 */
 	@Test
-	public void testCompany(){
+	public void testGetCompany(){
 		Integer companyId = 1;
 		Company company = createCompany(companyId, "Pepcus", "Software", "PEP");
 		when(companyRepository.findOne(companyId)).thenReturn(company);
@@ -67,6 +74,9 @@ public class CompanyServiceTest {
 		assertEquals("PEP", result.getDisplayName());
 	}
 	
+	/**
+	 * To verify addCompany method
+	 */
 	@Test
 	public void testAddCompany(){
 		Integer companyId = 1;
@@ -80,6 +90,9 @@ public class CompanyServiceTest {
 		assertEquals("PEP", result.getDisplayName());
 	}
 
+	/**
+	 * To verify updateCompany method
+	 */
 	@Test
 	public void testUpdateCompany(){
 		Integer companyId = 1;
@@ -93,8 +106,11 @@ public class CompanyServiceTest {
 		assertEquals("PEP", result.getDisplayName());
 	}
 	
+	/**
+	 * To verify deleteCompany method
+	 */
 	@Test
-	public void removeToDo(){
+	public void testDeleteCompany(){
 		Integer companyId = 1;
 		Company company = createCompany(companyId, "Pepcus", "Software", "PEP");
 		companyService.deleteCompany(company.getCompanyId());

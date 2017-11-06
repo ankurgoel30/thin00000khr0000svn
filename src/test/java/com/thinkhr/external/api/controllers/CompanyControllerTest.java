@@ -37,6 +37,7 @@ import com.thinkhr.external.api.ApiApplication;
 import com.thinkhr.external.api.model.CompanyModel;
 
 /**
+ * Junit class to test all the methods\APIs written for CompanyController
  * @author Surabhi Bhawsar
  * @since 2017-11-06
  *
@@ -60,6 +61,11 @@ public class CompanyControllerTest {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
 	}
 	
+	/**
+	 * Test to verify Get companies API (/v1/companies)  
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void verifyAllCompanyList() throws Exception {
 
@@ -75,6 +81,11 @@ public class CompanyControllerTest {
 		.andExpect(jsonPath("$[0].companyName", is(companyModel.getCompanyName())));	
 	}
 	
+	/**
+	 * Test to verify Get company by id API (/v1/companies/{companyId}). 
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void getArrivalsById() throws Exception {
 		CompanyModel companyModel = createCompanyModel(); 
@@ -87,6 +98,11 @@ public class CompanyControllerTest {
 		.andExpect(jsonPath("companyName", is(companyModel.getCompanyName())));
 	}
 
+	/**
+	 * Test to verify post company API (/v1/companies). 
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void testAddCompany() throws Exception {
 		CompanyModel companyModel = createCompanyModel(); 
@@ -103,8 +119,14 @@ public class CompanyControllerTest {
 		.andExpect(jsonPath("companyName", is(companyModel.getCompanyName())));
 	}
 
+	/**
+	 * Test to verify put company API (/v1/companies/{companyId}). 
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void testUpdateCompany() throws Exception {
+		//TODO: Need to understand why it is breaking.
 		CompanyModel companyModel = createCompanyModel(); 
 		
 		ResponseEntity<CompanyModel> responseEntity = createCompanyResponseEntity(companyModel, HttpStatus.CREATED);
@@ -119,6 +141,11 @@ public class CompanyControllerTest {
 		.andExpect(jsonPath("companyName", is(companyModel.getCompanyName())));
 	}
 
+	/**
+	 * Test to verify delete company API (/v1/companies/{companyId}) . 
+	 * 
+	 * @throws Exception
+	 */
 	@Test
 	public void testDeleteCompany() throws Exception {
 		
