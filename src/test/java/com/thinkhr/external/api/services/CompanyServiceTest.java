@@ -24,6 +24,7 @@ import com.thinkhr.external.api.repositories.CompanyRepository;
 
 /**
  * Junit to test all the methods of CompanyService.
+ * 
  * @author Surabhi Bhawsar
  * @since 2017-11-06
  *
@@ -46,6 +47,7 @@ public class CompanyServiceTest {
 	
 	/**
 	 * To verify getAllCompany method
+	 * 
 	 */
 	@Test
 	public void testGetAllCompany(){
@@ -61,6 +63,7 @@ public class CompanyServiceTest {
 	
 	/**
 	 * To verify createCompany method
+	 * 
 	 */
 	@Test
 	public void testGetCompany(){
@@ -76,6 +79,7 @@ public class CompanyServiceTest {
 	
 	/**
 	 * To verify addCompany method
+	 * 
 	 */
 	@Test
 	public void testAddCompany(){
@@ -92,7 +96,9 @@ public class CompanyServiceTest {
 
 	/**
 	 * To verify updateCompany method
+	 * 
 	 */
+	
 	@Test
 	public void testUpdateCompany(){
 		Integer companyId = 1;
@@ -108,6 +114,7 @@ public class CompanyServiceTest {
 	
 	/**
 	 * To verify deleteCompany method
+	 * 
 	 */
 	@Test
 	public void testDeleteCompany(){

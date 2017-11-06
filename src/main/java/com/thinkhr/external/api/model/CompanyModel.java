@@ -19,6 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * @since 2017-11-04
  *
  */
+
 @Data
 public class CompanyModel implements Serializable {
 
