@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.model.CompanyModel;
@@ -30,7 +30,7 @@ import com.thinkhr.external.api.repositories.CompanyRepository;
  *
  */
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class CompanyServiceTest {
 	
 	@Mock
@@ -119,8 +119,7 @@ public class CompanyServiceTest {
 	@Test
 	public void testDeleteCompany(){
 		Integer companyId = 1;
-		Company company = createCompany(companyId, "Pepcus", "Software", "PEP");
-		companyService.deleteCompany(company.getCompanyId());
+		companyService.deleteCompany(companyId);
         verify(companyRepository, times(1)).delete(companyId);
 	}
 

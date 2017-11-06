@@ -81,7 +81,7 @@ public class CompanyController {
      * 
      * @param CompanyModel object
      */
-    @RequestMapping(method=RequestMethod.PUT)
+    @RequestMapping(method=RequestMethod.PUT,value="/{companyId}")
 	public ResponseEntity <CompanyModel> updateCompany(@RequestBody CompanyModel companyModel) {
     	CompanyModel company = companyService.updateCompany(companyModel);
         return new ResponseEntity<CompanyModel> (company, HttpStatus.OK);
