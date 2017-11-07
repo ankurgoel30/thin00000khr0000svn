@@ -1,13 +1,21 @@
 package com.thinkhr.external.api.repositories;
-import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
+
+import java.util.Date;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.thinkhr.external.api.db.entities.Company;
+import com.thinkhr.external.api.utils.ApiTestDataUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Junit to verify methods of CompanyRepository with use of H2 database
@@ -17,7 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = NONE)
+@AutoConfigureTestDatabase(replace = Replace.AUTO_CONFIGURED)
 public class CompanyRepositoryTest {
 
 	@Autowired
@@ -40,6 +48,15 @@ public class CompanyRepositoryTest {
 	@Test
 	public void testFindOne() {
 		   //TODO: Add implementation	
+		Company company1 = ApiTestDataUtil.createCompany(null, "Pepcus", "Software", "PEP");
+		company1.setSearchHelp("Test");
+		company1.setCompanySince(new Date());
+		company1.setSpecialNote("111");
+		Company entity = companyRepository.save(company1);
+		Company foundEntity = companyRepository.findOne(entity.getCompanyId());
+		  
+        assertNotNull(foundEntity);
+        assertEquals(entity.getCompanyName(), foundEntity.getCompanyName());
 	}
 	
 	/**
