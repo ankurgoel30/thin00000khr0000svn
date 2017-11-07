@@ -4,31 +4,21 @@ Prerequisites:
 - good understanding of springboot, jwt, oauth, springdata, springrest
 
 Build
-- tweek any properties in the resources/application.properties files. Really don't need to if everything is on the localhost.
+- tweek any properties in the resources/application.properties files. Database is currently set
+to point 'thinkhrdev.cefradhqi7qp.us-west-2.rds.amazonaws.com'
+ 
 - mvn clean compile install -DskipTests
 
-Data setup
-- get into mysql
-- run sql scripts from resources/test.sql
+Instructions to run APIs under docker container
+1.	Checkout code from https://github.com/thinkhr-code/japi (AWS-DEVELOPER branch)
+2.	Modify /src/main/resources/application.properties to point to appropriate database instance 
+3.	Locate docker file at root folder 
+4.	Build docker image & run
 
-NGINX setup (if you want to include this as part of your bigger project )
-Add the following to the nginx, and run the nginx on port 80
-
-location /api/v1 {
-            proxy_pass   http://127.0.0.1:8080/v1/;
-}
-
-Run the server ( this will be in the target directory. This will start the server on port 8080
-- run the server as java -jar api-0.0.1-SNAPSHOT.jar
-
-Test
-- Open postman and import resources/ThinkHR.postman_collection
-- run the first curl command from resources/curls ( this is for the standard user role )
--- copy access_token, replace the bearer token in postman collection for document/1
-- run the second curl command from resources/curls ( this is for the admin user role )
--- copy access_token, replace the bearer token in postman collection for documents and document
-- Hit send on the postman urls.
-Example URLS:
-NGINX based : http://localhost/api/v1/document/1
-Straight : http://localhost:8080/v1/document/1
+Instructions to run as spring boot project
+1.	Checkout code from https://github.com/thinkhr-code/japi (AWS-DEVELOPER branch)
+2.	Modify /src/main/resources/application.properties to point to appropriate database instance
+3.	Run as maven project with command  "mvn clean compile install"
+4.	Locate executable JAR file (api-0.1.jar) inside /target folder 
+5.	Run command "Java -jar api-0.1.jar (This will launch inbuilt tomcat container and execute the application)
 
