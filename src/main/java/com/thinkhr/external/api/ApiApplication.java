@@ -1,6 +1,5 @@
 package com.thinkhr.external.api;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.MessageSource;
@@ -40,13 +39,4 @@ public class ApiApplication {
 		return messageSource;
 	}
 	
-	/**
-	 * ModelMapper object for interchanging model and entities
-	 * 
-	 * @return ModelMapper
-	 */
-	@Bean
-	public ModelMapper modelMapper() {
-	    return new ModelMapper();
-	}
 }
