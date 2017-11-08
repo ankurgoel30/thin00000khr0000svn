@@ -20,6 +20,14 @@ import com.thinkhr.external.api.db.entities.Company;
 public class ApiTestDataUtil {
 
 	public static final String COMPANY_API_BASE_PATH = "/v1/companies/";
+	public static final String COMPANY_API_REQUEST_PARAM_OFFSET = "offset";
+	public static final String COMPANY_API_REQUEST_PARAM_LIMIT = "limit";
+	public static final String COMPANY_API_REQUEST_PARAM_SORT = "sort";
+	public static final String COMPANY_API_REQUEST_PARAM_SEARCH_SPEC = "searchSpec";
+	public static final Integer OFFSET = 3;
+    public static final Integer LIMIT = 10;
+    public static final String SORT_BY = "companyType";
+    public static final String SEARCH_SPEC = null;
 
 	
 	/**

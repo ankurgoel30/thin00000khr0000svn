@@ -1,6 +1,11 @@
 package com.thinkhr.external.api.services;
 
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,8 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.thinkhr.external.api.db.entities.Company;
@@ -47,7 +52,7 @@ public class CompanyServiceTest {
 	}
 	
 	/**
-	 * To verify getAllCompany method
+	 * To verify getAllCompany method when no specific (Default) method arguments are provided 
 	 * 
 	 */
 	@Test
@@ -56,10 +61,32 @@ public class CompanyServiceTest {
 		companyList.add(createCompany(1, "Pepcus", "Software", "PEP"));
 		companyList.add(createCompany(2, "ThinkHR", "Service Provider", "THR"));
 		companyList.add(createCompany(3, "ICICI", "Banking", "ICICI"));
-		Pageable pageable = new PageRequest(0, 10);
-		when(companyRepository.findAll(pageable)).thenReturn(new PageImpl<>(companyList, pageable, companyList.size()));
-		//TODO: FIX ME
-		List<Company> result = companyService.getAllCompany(null, null, null,null);
+		Pageable pageable = companyService.getPageable(null, null, null);
+		
+		when(companyRepository.findAll(null, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
+
+		List<Company> result = companyService.getAllCompany(null, null, null, null);
+		assertEquals(3, result.size());
+	}
+	
+	/**
+	 * To verify getAllCompany method when specific method arguments are provided
+	 * 
+	 */
+	@Test
+	public void testGetAllCompanyForParams(){
+		List<Company> companyList = new ArrayList<Company>();
+		companyList.add(createCompany(1, "Pepcus", "Software", "PEP"));
+		companyList.add(createCompany(2, "ThinkHR", "Service Provider", "THR"));
+		companyList.add(createCompany(3, "ICICI", "Banking", "ICICI"));
+		Pageable pageable = companyService.getPageable(OFFSET, LIMIT, SORT_BY);
+		Specification<Company> spec = null;
+    	if(SEARCH_SPEC != null && SEARCH_SPEC.trim() != "") {
+    		spec = new CompanySearchSpecification(SEARCH_SPEC);
+    	}
+		when(companyRepository.findAll(spec, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
+
+		List<Company> result = companyService.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC);
 		assertEquals(3, result.size());
 	}
 	
