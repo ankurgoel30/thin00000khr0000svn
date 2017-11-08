@@ -3,6 +3,8 @@ package com.thinkhr.external.api.services;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import lombok.Data;
 
@@ -19,6 +21,8 @@ public class CommonService {
 
     @Autowired
     private ModelMapper modelMapper;
+    public static final int DEFAULT_OFFSET = 0;
+    public static final int DEFAULT_LIMIT = 50;
 
     /**
      * TODO
@@ -30,4 +34,40 @@ public class CommonService {
         Object toObject = modelMapper.map(fromObj, toClass);
         return toObject;
     }
+    
+    public Pageable getPageable(Integer offset,Integer limit,String sortField) {
+    	OffsetPageRequest pageable = null;
+    	if (offset == null) {
+    		offset = DEFAULT_OFFSET;
+    	}
+    	
+    	if (limit == null) {
+    		limit = DEFAULT_LIMIT;
+    	}
+    	
+    	Sort.Direction sortDirection = Sort.Direction.ASC;
+    	if (sortField == null || sortField.trim() == "") {
+    		sortField = getDefaultSortField();
+    	} else {
+    		char directionIndicator = sortField.charAt(0);
+    		if(directionIndicator == '+') {
+    			sortDirection = Sort.Direction.ASC;
+    			sortField = sortField.substring(1);
+    		} else if (directionIndicator == '-' ) {
+    			sortDirection = Sort.Direction.DESC ;
+    			sortField = sortField.substring(1);
+    		}
+    	} 
+    	
+    	Sort sort = new Sort(sortDirection,sortField);
+    	pageable = new OffsetPageRequest(offset/limit, limit,sort);
+    	pageable.setOffset(offset);
+    	return pageable;
+    }
+    
+    public String getDefaultSortField()  {
+    	return null;
+    }
+   
+ 
 }
