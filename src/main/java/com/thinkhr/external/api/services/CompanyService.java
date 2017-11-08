@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
 import com.thinkhr.external.api.db.entities.Company;
@@ -33,15 +35,23 @@ public class CompanyService  extends CommonService {
     public static final String DEFAULT_SORT_BY = "companyName";
 
     /**
-     * Fetch all companies from database. To avoid huge number of records, we are limiting the records only upto 10 numbers.
+     * Fetch all companies from database based on offset, limit and sortField
      * 
+     * @param Integer offset First record index from database after sorting. Default value is 0
+     * @param Integer limit Number of records to be fetched. Default value is 50
+     * @param String sortField Field on which records needs to be sorted
+     * @param String searchSpec Search string for filtering results
      * @return List<Company> object 
      */
-    public List<Company> getAllCompany(Integer offset,Integer limit ,String sortField) {
+    public List<Company> getAllCompany(Integer offset,Integer limit ,String sortField,String searchSpec) {
     	List<Company> companies = new ArrayList<Company>();
 
     	Pageable pageable = getPageable(offset, limit, sortField);
-    	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(pageable);
+    	Specification<Company> spec = null;
+    	if(searchSpec != null && searchSpec.trim() != "") {
+    		spec = new CompanySearchSpecification(searchSpec);
+    	}
+    	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec,pageable);
 
     	companyList.getContent().forEach(c -> companies.add(c));
     	
