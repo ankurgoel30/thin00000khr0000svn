@@ -59,7 +59,7 @@ public class CompanyServiceTest {
 		Pageable pageable = new PageRequest(0, 10);
 		when(companyRepository.findAll(pageable)).thenReturn(new PageImpl<>(companyList, pageable, companyList.size()));
 		//TODO: FIX ME
-		List<Company> result = companyService.getAllCompany(null, null, null);
+		List<Company> result = companyService.getAllCompany(null, null, null,null);
 		assertEquals(3, result.size());
 	}
 	

@@ -21,8 +21,6 @@ public class OffsetPageRequest extends PageRequest{
 		super(page, size, sort);
 	}
 
-	
-	
 	@Override
 	public int getOffset() {
 		return offset;
@@ -31,6 +29,4 @@ public class OffsetPageRequest extends PageRequest{
 	public void setOffset(int offset) {
 		this.offset = offset;
 	}
-	
-
 }

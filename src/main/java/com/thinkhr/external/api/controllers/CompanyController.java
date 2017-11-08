@@ -44,8 +44,9 @@ public class CompanyController {
      */
     @RequestMapping(method=RequestMethod.GET)
     public List<Company> getAllCompany(@RequestParam(value = "offset", required = false) Integer offset,
-    		@RequestParam(value = "limit", required = false) Integer limit,@RequestParam(value = "sort" , required = false) String sort) {
-    	return companyService.getAllCompany(offset,limit,sort);
+    		@RequestParam(value = "limit", required = false) Integer limit,@RequestParam(value = "sort" , required = false) String sort,
+    		@RequestParam(value = "searchSpec" , required = false) String searchSpec){
+    	return companyService.getAllCompany(offset,limit,sort,searchSpec);
     }
     
     /**
