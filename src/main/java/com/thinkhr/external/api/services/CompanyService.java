@@ -104,6 +104,6 @@ public class CompanyService  extends CommonService {
      */
     @Override
     public String getDefaultSortField()  {
-    	return null;
+    	return DEFAULT_SORT_BY;
     }
 }
