@@ -73,7 +73,8 @@ public class CompanyControllerTest {
 
 		List<Company> companyList = singletonList(Company);
 
-		given(companyController.getAllCompany()).willReturn(companyList);
+		//TODO: fix for arguments
+		given(companyController.getAllCompany(null, null, null)).willReturn(companyList);
 		
 		mockMvc.perform(get(COMPANY_API_BASE_PATH).accept(MediaType.APPLICATION_JSON))
 		.andExpect(status().isOk())

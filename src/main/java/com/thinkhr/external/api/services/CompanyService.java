@@ -2,20 +2,16 @@ package com.thinkhr.external.api.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
-import com.thinkhr.external.api.model.CompanyModel;
 import com.thinkhr.external.api.repositories.CompanyRepository;
 
 /**
@@ -41,14 +37,15 @@ public class CompanyService  extends CommonService {
      * 
      * @return List<Company> object 
      */
-    public List<CompanyModel> getAllCompany(Integer offset,Integer limit ,String sortField) {
+    public List<Company> getAllCompany(Integer offset,Integer limit ,String sortField) {
     	List<Company> companies = new ArrayList<Company>();
 
     	Pageable pageable = getPageable(offset, limit, sortField);
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(pageable);
 
     	companyList.getContent().forEach(c -> companies.add(c));
-    	return companies.stream().map(c -> { return (CompanyModel) convert(c, CompanyModel.class); }).collect(Collectors.toList());
+    	
+    	return companies;
     }
     
     /**
@@ -57,39 +54,33 @@ public class CompanyService  extends CommonService {
      * @param companyId
      * @return Company object 
      */
-    public CompanyModel getCompany(Integer companyId) {
-    	Company company = null;
-    	company = companyRepository.findOne(companyId);
-    	return (null != company ? (CompanyModel) convert(company, CompanyModel.class) : null);    
+    public Company getCompany(Integer companyId) {
+    	return companyRepository.findOne(companyId);
     }
     
     /**
      * Add a company in database
      * 
-     * @param CompanyModel object
+     * @param company object
      */
-    public CompanyModel addCompany(CompanyModel companyModel)  {
-		Company company = (Company)convert(companyModel, Company.class);
-    	companyRepository.save(company);
-    	return (CompanyModel) convert(company, CompanyModel.class);
+    public Company addCompany(Company company)  {
+    	return companyRepository.save(company);
     }
     
     /**
      * Update a company in database
      * 
-     * @param CompanyModel object
+     * @param company object
      * @throws ApplicationException 
      */
-    public CompanyModel updateCompany(CompanyModel companyModel) throws ApplicationException  {
-    	Integer companyId = companyModel.getCompanyId();
+    public Company updateCompany(Company company) throws ApplicationException  {
+    	Integer companyId = company.getCompanyId();
     	
 		if (null == companyRepository.findOne(companyId)) {
     		throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
     	}
 		
-		Company company = (Company)convert(companyModel, Company.class);
-    	companyRepository.save(company);
-    	return (CompanyModel) convert(company, CompanyModel.class);
+    	return companyRepository.save(company);
 
     }
     
@@ -105,8 +96,7 @@ public class CompanyService  extends CommonService {
     		throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
     	}
     	return companyId;
-    }
-    
+    }    
     /**
      * Return default sort field for company service
      * 

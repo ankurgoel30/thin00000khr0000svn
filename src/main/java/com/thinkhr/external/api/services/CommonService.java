@@ -19,22 +19,9 @@ import lombok.Data;
 @Data
 public class CommonService {
 
-    @Autowired
-    private ModelMapper modelMapper;
     public static final int DEFAULT_OFFSET = 0;
     public static final int DEFAULT_LIMIT = 50;
 
-    /**
-     * TODO
-     * @param obj
-     * @param fromClass
-     * @param toClass
-     */
-    protected Object convert(Object fromObj,  Class toClass) {
-        Object toObject = modelMapper.map(fromObj, toClass);
-        return toObject;
-    }
-    
     public Pageable getPageable(Integer offset,Integer limit,String sortField) {
     	OffsetPageRequest pageable = null;
     	if (offset == null) {
