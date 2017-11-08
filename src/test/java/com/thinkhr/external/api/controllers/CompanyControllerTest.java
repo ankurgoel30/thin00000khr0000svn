@@ -1,6 +1,14 @@
 package com.thinkhr.external.api.controllers;
 
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_BASE_PATH;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_OFFSET;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_LIMIT;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_SORT;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_SEARCH_SPEC;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyIdResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyResponseEntity;
@@ -62,21 +70,46 @@ public class CompanyControllerTest {
 	}
 	
 	/**
-	 * Test to verify Get companies API (/v1/companies)  
+	 * Test to verify Get companies API (/v1/companies) when no request params (default) are provided  
 	 * 
 	 * @throws Exception
 	 */
 	@Test
 	public void testAllCompany() throws Exception {
-
+		
 		Company Company = createCompany(); 
 
 		List<Company> companyList = singletonList(Company);
 
-		//TODO: fix for arguments
-		given(companyController.getAllCompany(null, null, null,null)).willReturn(companyList);
+		given(companyController.getAllCompany(null, null, null, null)).willReturn(companyList);
 		
-		mockMvc.perform(get(COMPANY_API_BASE_PATH).accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(get(COMPANY_API_BASE_PATH)
+			   .accept(MediaType.APPLICATION_JSON))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$", hasSize(1)))
+		.andExpect(jsonPath("$[0].companyName", is(Company.getCompanyName())));	
+	}
+
+	/**
+	 * Test to verify Get companies API (/v1/companies) when request params are provided  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompanyForRequestParams() throws Exception {
+		
+		Company Company = createCompany(); 
+
+		List<Company> companyList = singletonList(Company);
+
+		given(companyController.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC)).willReturn(companyList);
+		
+		mockMvc.perform(get(COMPANY_API_BASE_PATH)
+			   .param(COMPANY_API_REQUEST_PARAM_OFFSET, String.valueOf(OFFSET))
+			   .param(COMPANY_API_REQUEST_PARAM_LIMIT, String.valueOf(LIMIT))
+			   .param(COMPANY_API_REQUEST_PARAM_SORT, SORT_BY)
+			   .param(COMPANY_API_REQUEST_PARAM_SEARCH_SPEC, SEARCH_SPEC)
+			   .accept(MediaType.APPLICATION_JSON))
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("$", hasSize(1)))
 		.andExpect(jsonPath("$[0].companyName", is(Company.getCompanyName())));	
@@ -94,7 +127,7 @@ public class CompanyControllerTest {
 		given(companyController.getById(Company.getCompanyId())).willReturn(Company);
 
 		mockMvc.perform(get(COMPANY_API_BASE_PATH + Company.getCompanyId())
-				.accept(MediaType.APPLICATION_JSON))
+			   .accept(MediaType.APPLICATION_JSON))
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("companyName", is(Company.getCompanyName())));
 	}
@@ -113,9 +146,9 @@ public class CompanyControllerTest {
 		given(companyController.addCompany(Company)).willReturn(responseEntity);
 
 		mockMvc.perform(post(COMPANY_API_BASE_PATH)
-				.accept(MediaType.APPLICATION_JSON)
-				.contentType(MediaType.APPLICATION_JSON)
-		        .content(getJsonString(Company)))
+			   .accept(MediaType.APPLICATION_JSON)
+			   .contentType(MediaType.APPLICATION_JSON)
+		       .content(getJsonString(Company)))
 		.andExpect(status().isCreated())
 		.andExpect(jsonPath("companyName", is(Company.getCompanyName())));
 	}
@@ -134,9 +167,9 @@ public class CompanyControllerTest {
 		given(companyController.updateCompany(Company.getCompanyId(), Company)).willReturn(responseEntity);
 
 		mockMvc.perform(put(COMPANY_API_BASE_PATH+Company.getCompanyId())
-				.accept(MediaType.APPLICATION_JSON)
-				.contentType(MediaType.APPLICATION_JSON)
-		        .content(getJsonString(Company)))
+			   .accept(MediaType.APPLICATION_JSON)
+			   .contentType(MediaType.APPLICATION_JSON)
+		       .content(getJsonString(Company)))
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("companyName", is(Company.getCompanyName())));
 	}
@@ -156,7 +189,7 @@ public class CompanyControllerTest {
 		given(companyController.deleteCompany(Company.getCompanyId())).willReturn(responseEntity);
 
 		mockMvc.perform(delete(COMPANY_API_BASE_PATH+Company.getCompanyId())
-				.accept(MediaType.APPLICATION_JSON))
+			   .accept(MediaType.APPLICATION_JSON))
 		.andExpect(status().is(204));
 	}
 
