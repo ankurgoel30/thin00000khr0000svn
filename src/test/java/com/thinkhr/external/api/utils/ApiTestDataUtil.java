@@ -1,5 +1,7 @@
 package com.thinkhr.external.api.utils;
 
+import java.util.Date;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.PropertyException;
 
@@ -95,10 +97,13 @@ public class ApiTestDataUtil {
 	 */
 	public static Company createCompany() {
 		Company company = new Company();
-		company.setCompanyId(1);
+		company.setCompanyId(17);
+		company.setSearchHelp("HELP"); 
 		company.setCompanyName("Pepcus");
 		company.setCompanyType("Software");
 		company.setDisplayName("PEP");
+		company.setCompanySince(new Date());
+		company.setSpecialNote("SPECIAL"); 
 		return company;
 	}
 
