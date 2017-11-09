@@ -2,13 +2,14 @@ package com.thinkhr.external.api.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
 import com.thinkhr.external.api.db.entities.Company;
@@ -32,7 +33,6 @@ public class CompanyService  extends CommonService {
 	
     @Autowired
     private CompanyRepository companyRepository;
-    public static final String DEFAULT_SORT_BY = "companyName";
 
     /**
      * Fetch all companies from database based on offset, limit and sortField
@@ -48,7 +48,7 @@ public class CompanyService  extends CommonService {
 
     	Pageable pageable = getPageable(offset, limit, sortField);
     	Specification<Company> spec = null;
-    	if(searchSpec != null && searchSpec.trim() != "") {
+    	if(StringUtils.isEmpty(searchSpec)) {
     		spec = new CompanySearchSpecification(searchSpec);
     	}
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec,pageable);
@@ -114,6 +114,6 @@ public class CompanyService  extends CommonService {
      */
     @Override
     public String getDefaultSortField()  {
-    	return DEFAULT_SORT_BY;
+    	return DEFAULT_SORT_BY_COMPANY_NAME;
     }
 }
