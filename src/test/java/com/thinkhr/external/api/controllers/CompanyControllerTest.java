@@ -10,6 +10,7 @@ import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanies;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyIdResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.getJsonString;
@@ -18,6 +19,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.given;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.el.parser.ParseException;
 import org.hibernate.JDBCException;
 import org.junit.Before;
@@ -40,6 +43,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +61,8 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.CompanyRepository;
+import com.thinkhr.external.api.services.CompanyService;
+import com.thinkhr.external.api.services.util.EntitySearchSpecification;
 
 /**
  * Junit class to test all the methods\APIs written for CompanyController
@@ -76,6 +84,9 @@ public class CompanyControllerTest {
 	
 	@Autowired
 	private CompanyRepository companyRepository;
+	
+	@Autowired
+	private CompanyService companyService;
 	
 	@Autowired
     private WebApplicationContext wac;
@@ -105,6 +116,107 @@ public class CompanyControllerTest {
 		.andExpect(jsonPath("$", hasSize(1)))
 		.andExpect(jsonPath("$[0].companyName", is(Company.getCompanyName())));	
 	}
+	
+	/**
+	 * Test to verify get all companies when no parameters (default) are provided.  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompaniesWithDefault() throws Exception {
+		
+		List<Company> companyList = createCompanies();
+
+		for (Company company : companyList) {
+			companyRepository.save(company);
+		}
+		String searchSpec = null;
+		Pageable pageable = companyService.getPageable(null, null, null);
+    	Specification<Company> spec = null;
+    	if(StringUtils.isNotBlank(searchSpec)) {
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
+    	}
+    	Page<Company> companies  = (Page<Company>) companyRepository.findAll(spec, pageable);
+    	
+    	assertNotNull(companies.getContent());
+    	assertEquals(companies.getContent().size(), 10);
+	}
+	
+	/**
+	 * Test to verify get all companies when specific parameters are provided.  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompaniesWithParamsAndSearchSpecNull() throws Exception {
+		
+		List<Company> companyList = createCompanies();
+
+		for (Company company : companyList) {
+			companyRepository.save(company);
+		}
+		String searchSpec = null;
+		Pageable pageable = companyService.getPageable(3, 3, "companyType");
+    	Specification<Company> spec = null;
+    	if(StringUtils.isNotBlank(searchSpec)) {
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
+    	}
+    	Page<Company> companies  = (Page<Company>) companyRepository.findAll(spec, pageable);
+    	
+    	assertNotNull(companies.getContent());
+    	assertEquals(companies.getContent().size(), 3);
+	}
+	
+	/**
+	 * Test to verify get all companies when specific parameters are provided.  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompaniesWithParamsAndPageableNull() throws Exception {
+		
+		List<Company> companyList = createCompanies();
+
+		for (Company company : companyList) {
+			companyRepository.save(company);
+		}
+		String searchSpec = "fifth";
+		Pageable pageable = companyService.getPageable(null, null, null);
+    	Specification<Company> spec = null;
+    	if(StringUtils.isNotBlank(searchSpec)) {
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
+    	}
+    	Page<Company> companies  = (Page<Company>) companyRepository.findAll(spec, pageable);
+    	
+    	assertNotNull(companies.getContent());
+    	assertEquals(companies.getContent().size(), 1);
+	}
+	
+	/**
+	 * Test to verify get all companies when specific parameters are provided.  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompaniesWithParams() throws Exception {
+		
+		List<Company> companyList = createCompanies();
+
+		for (Company company : companyList) {
+			companyRepository.save(company);
+		}
+		String searchSpec = "fifth";
+		Pageable pageable = companyService.getPageable(3, 3, "companyType");
+    	Specification<Company> spec = null;
+    	if(StringUtils.isNotBlank(searchSpec)) {
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
+    	}
+    	Page<Company> companies  = (Page<Company>) companyRepository.findAll(spec, pageable);
+    	
+    	assertNotNull(companies.getContent());
+    	assertEquals(companies.getContent().size(), 3);
+	}
+	
 	/**
 	 * Test to verify Get All Companies API (/v1/companies) when No records are available
 	 * 
