@@ -31,7 +31,7 @@ public class CommonService {
     public Pageable getPageable(Integer offset,Integer limit,String sortedBy) {
     	OffsetPageRequest pageable = null;
     	offset = offset == null ? DEFAULT_OFFSET : offset;
-    	limit = limit == null ? DEFAULT_LIMIT : offset;
+    	limit = limit == null ? DEFAULT_LIMIT : limit;
     	sortedBy = StringUtils.isBlank(sortedBy) ? getDefaultSortField() : sortedBy;
 
     	Sort.Direction sortDirection = getSortDirection(sortedBy);
@@ -52,11 +52,12 @@ public class CommonService {
      * @return
      */
     private String extractSortDirection(String sortedBy, Sort.Direction sortDirection) {
-    	if (sortDirection.isAscending()) {
-    	   return sortedBy.replaceFirst("", ASCENDING);
-    	} else { 
-    	   return sortedBy.replaceFirst("", DESENDING);
-    	}	
+    	String directionIndicator = sortedBy.substring(0,1);
+		if(directionIndicator.equals(ASCENDING) || directionIndicator.equals(DESENDING) ) {
+			sortedBy = sortedBy.substring(1);
+		} 
+		
+		return sortedBy;
 	}
 
 	/**
