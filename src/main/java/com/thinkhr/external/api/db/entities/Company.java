@@ -73,7 +73,7 @@ public class Company implements SearchableEntity {
 	@NotNull
 	@Column(name = "Client_Since",nullable=false) 
 	@Temporal(TemporalType.DATE)
-	private Date companySince = new Date();
+	private Date companySince;
 	
 	@Column(name = "tempID") 
 	private String tempID;
