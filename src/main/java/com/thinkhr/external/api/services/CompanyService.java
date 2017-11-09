@@ -1,8 +1,9 @@
 package com.thinkhr.external.api.services;
 
+import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
+
 import java.util.ArrayList;
 import java.util.List;
-import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.CompanyRepository;
+import com.thinkhr.external.api.services.util.EntitySearchSpecification;
 
 /**
 *
@@ -49,7 +51,7 @@ public class CompanyService  extends CommonService {
     	Pageable pageable = getPageable(offset, limit, sortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
-    		spec = new CompanySearchSpecification(searchSpec);
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
     	}
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec,pageable);
 

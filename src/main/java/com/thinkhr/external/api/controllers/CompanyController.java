@@ -82,7 +82,7 @@ public class CompanyController {
     /**
      * Update a company in database
      * 
-     * @param CompanyModel object
+     * @param Company object
      */
     @RequestMapping(method=RequestMethod.PUT,value="/{companyId}")
 	public ResponseEntity <Company> updateCompany(@PathVariable(name="companyId",value = "companyId") Integer companyId, 

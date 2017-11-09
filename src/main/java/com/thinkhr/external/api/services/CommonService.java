@@ -1,12 +1,17 @@
 package com.thinkhr.external.api.services;
 
-import static com.thinkhr.external.api.ApplicationConstants.*;
+import static com.thinkhr.external.api.ApplicationConstants.ASCENDING;
+import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_LIMIT;
+import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_OFFSET;
+import static com.thinkhr.external.api.ApplicationConstants.DESENDING;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
+import com.thinkhr.external.api.services.util.OffsetPageRequest;
 
 import lombok.Data;
 
