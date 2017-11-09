@@ -1,12 +1,12 @@
 package com.thinkhr.external.api.services;
 
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
-
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -95,7 +95,7 @@ public class CompanyServiceTest {
 	 * 
 	 */
 	@Test
-	public void testGetCompany(){
+	public void testGetCompany() {
 		Integer companyId = 1;
 		Company company = createCompany(companyId, "Pepcus", "Software", "PEP");
 		when(companyRepository.findOne(companyId)).thenReturn(company);
@@ -104,6 +104,18 @@ public class CompanyServiceTest {
 		assertEquals("Pepcus", result.getCompanyName());
 		assertEquals("Software", result.getCompanyType());
 		assertEquals("PEP", result.getDisplayName());
+	}
+	
+	/**
+	 * To verify createCompany method
+	 * 
+	 */
+	@Test
+	public void testGetCompanyNotExists() {
+		Integer companyId = 16;
+		when(companyRepository.findOne(companyId)).thenReturn(null);
+		Company result = companyService.getCompany(companyId);
+		assertNull("companyId " + companyId + " does not exist", result);
 	}
 	
 	/**

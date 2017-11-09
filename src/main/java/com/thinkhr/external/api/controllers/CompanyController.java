@@ -86,7 +86,7 @@ public class CompanyController {
      */
     @RequestMapping(method=RequestMethod.PUT,value="/{companyId}")
 	public ResponseEntity <Company> updateCompany(@PathVariable(name="companyId",value = "companyId") Integer companyId, 
-			@RequestBody Company company) throws ApplicationException {
+			@Valid @RequestBody Company company) throws ApplicationException {
     	company.setCompanyId(companyId);
     	companyService.updateCompany(company);
         return new ResponseEntity<Company> (company, HttpStatus.OK);

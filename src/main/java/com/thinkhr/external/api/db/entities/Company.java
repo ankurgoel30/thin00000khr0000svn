@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import lombok.Data;
 
@@ -34,12 +36,18 @@ public class Company {
 	@Column(name = "clientID") 
 	private Integer companyId;
 	
+	@NotNull
+	@Size(min=1)
 	@Column(name = "search_help") 
 	private String searchHelp;
 		
+	@NotNull
+	@Size(min=1)
 	@Column(name = "Client_Type") 
 	private String companyType;
 	
+	@NotNull
+	@Size(min=1)
 	@Column(name = "Client_Name") 
 	private String companyName;
 	
@@ -58,6 +66,7 @@ public class Company {
 	@Column(name = "Website") 
 	private String website;
 	
+	@NotNull
 	@Column(name = "Client_Since",nullable=false) 
 	@Temporal(TemporalType.DATE)
 	private Date companySince = new Date();
@@ -283,7 +292,9 @@ public class Company {
 	
 	@Column(name = "salesforceID") 
 	private String salesforceID;
-	
+
+	@NotNull
+	@Size(min=1)
 	@Column(name = "special_note",nullable=false) 
 	private String specialNote;
 	
