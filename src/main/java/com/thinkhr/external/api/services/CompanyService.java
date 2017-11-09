@@ -48,7 +48,7 @@ public class CompanyService  extends CommonService {
 
     	Pageable pageable = getPageable(offset, limit, sortField);
     	Specification<Company> spec = null;
-    	if(StringUtils.isEmpty(searchSpec)) {
+    	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new CompanySearchSpecification(searchSpec);
     	}
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec,pageable);
