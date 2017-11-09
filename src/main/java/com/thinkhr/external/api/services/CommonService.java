@@ -1,10 +1,12 @@
 package com.thinkhr.external.api.services;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import static com.thinkhr.external.api.ApplicationConstants.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.stereotype.Service;
+
 
 import lombok.Data;
 
@@ -19,40 +21,56 @@ import lombok.Data;
 @Data
 public class CommonService {
 
-    public static final int DEFAULT_OFFSET = 0;
-    public static final int DEFAULT_LIMIT = 50;
-
-    public Pageable getPageable(Integer offset,Integer limit,String sortField) {
+    /**
+     * Get Pageable instance
+     * @param offset
+     * @param limit
+     * @param sortedBy
+     * @return
+     */
+    public Pageable getPageable(Integer offset,Integer limit,String sortedBy) {
     	OffsetPageRequest pageable = null;
-    	if (offset == null) {
-    		offset = DEFAULT_OFFSET;
-    	}
+    	offset = offset == null ? DEFAULT_OFFSET : offset;
+    	limit = limit == null ? DEFAULT_LIMIT : offset;
+    	sortedBy = StringUtils.isBlank(sortedBy) ? getDefaultSortField() : sortedBy;
+
+    	Sort.Direction sortDirection = getSortDirection(sortedBy);
     	
-    	if (limit == null) {
-    		limit = DEFAULT_LIMIT;
-    	}
-    	
-    	Sort.Direction sortDirection = Sort.Direction.ASC;
-    	if (sortField == null || sortField.trim() == "") {
-    		sortField = getDefaultSortField();
-    	} else {
-    		char directionIndicator = sortField.charAt(0);
-    		if(directionIndicator == '+') {
-    			sortDirection = Sort.Direction.ASC;
-    			sortField = sortField.substring(1);
-    		} else if (directionIndicator == '-' ) {
-    			sortDirection = Sort.Direction.DESC ;
-    			sortField = sortField.substring(1);
-    		}
-    	} 
-    	
-    	Sort sort = new Sort(sortDirection,sortField);
-    	pageable = new OffsetPageRequest(offset/limit, limit,sort);
+		sortedBy = extractSortDirection(sortedBy, sortDirection); // Extracted out + or - character from sortBy string
+
+		Sort sort = new Sort(sortDirection,sortedBy);
+		
+    	pageable = new OffsetPageRequest(offset/limit, limit, sort);
     	pageable.setOffset(offset);
     	return pageable;
     }
     
-    public String getDefaultSortField()  {
+    /**
+     * It will extract + or - character those stands for sort direction from column field name
+     * @param sortedBy
+     * @param sortDirection
+     * @return
+     */
+    private String extractSortDirection(String sortedBy, Sort.Direction sortDirection) {
+    	if (sortDirection.isAscending()) {
+    	   return sortedBy.replaceFirst("", ASCENDING);
+    	} else { 
+    	   return sortedBy.replaceFirst("", DESENDING);
+    	}	
+	}
+
+	/**
+     * Get the first character out from sortedBy value. 
+     * like +companyName
+     * @param sortedBy
+     * @return
+     */
+    private Direction getSortDirection(String sortedBy) {
+    	String sortDirection =  sortedBy.substring(0,1);
+    	return DESENDING.equalsIgnoreCase(sortDirection) ? Direction.DESC : Direction.ASC;
+	}
+
+	public String getDefaultSortField()  {
     	return null;
     }
    
