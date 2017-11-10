@@ -1,25 +1,18 @@
 package com.thinkhr.external.api.controllers;
 
+import static com.thinkhr.external.api.services.utils.EntitySearchUtil.*;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_BASE_PATH;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_OFFSET;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_LIMIT;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_SORT;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_API_REQUEST_PARAM_SEARCH_SPEC;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanies;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyIdResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompanyResponseEntity;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.getJsonString;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,11 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.el.parser.ParseException;
 import org.hibernate.JDBCException;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +53,7 @@ import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.CompanyRepository;
 import com.thinkhr.external.api.services.CompanyService;
-import com.thinkhr.external.api.services.util.EntitySearchSpecification;
+import com.thinkhr.external.api.services.EntitySearchSpecification;
 
 /**
  * Junit class to test all the methods\APIs written for CompanyController
@@ -90,6 +81,8 @@ public class CompanyControllerTest {
 	
 	@Autowired
     private WebApplicationContext wac;
+	
+	private String defaultSortField = "+companyName";
 
 	@Before
 	public void setup() {
@@ -131,7 +124,7 @@ public class CompanyControllerTest {
 			companyRepository.save(company);
 		}
 		String searchSpec = null;
-		Pageable pageable = companyService.getPageable(null, null, null);
+		Pageable pageable = getPageable(null, null, null, defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
@@ -156,7 +149,7 @@ public class CompanyControllerTest {
 			companyRepository.save(company);
 		}
 		String searchSpec = null;
-		Pageable pageable = companyService.getPageable(3, 3, "companyType");
+		Pageable pageable = getPageable(3, 3, "companyType", defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
@@ -181,7 +174,7 @@ public class CompanyControllerTest {
 			companyRepository.save(company);
 		}
 		String searchSpec = "fifth";
-		Pageable pageable = companyService.getPageable(null, null, null);
+		Pageable pageable = getPageable(null, null, null, defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
@@ -206,7 +199,7 @@ public class CompanyControllerTest {
 			companyRepository.save(company);
 		}
 		String searchSpec = "fifth";
-		Pageable pageable = companyService.getPageable(3, 3, "companyType");
+		Pageable pageable = getPageable(3, 3, "companyType", defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());

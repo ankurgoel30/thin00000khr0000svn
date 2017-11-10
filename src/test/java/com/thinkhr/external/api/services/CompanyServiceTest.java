@@ -1,5 +1,6 @@
 package com.thinkhr.external.api.services;
 
+import static com.thinkhr.external.api.services.utils.EntitySearchUtil.*;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
@@ -46,6 +47,8 @@ public class CompanyServiceTest {
 	@InjectMocks
 	private CompanyService companyService;
 	
+	private String defaultSortField = "+companyName";
+	
 	@Before
 	public void setup(){
 		MockitoAnnotations.initMocks(this);
@@ -61,7 +64,7 @@ public class CompanyServiceTest {
 		companyList.add(createCompany(1, "Pepcus", "Software", "PEP"));
 		companyList.add(createCompany(2, "ThinkHR", "Service Provider", "THR"));
 		companyList.add(createCompany(3, "ICICI", "Banking", "ICICI"));
-		Pageable pageable = companyService.getPageable(null, null, null);
+		Pageable pageable = getPageable(null, null, null, defaultSortField);
 		
 		when(companyRepository.findAll(null, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
 
@@ -79,7 +82,7 @@ public class CompanyServiceTest {
 		companyList.add(createCompany(1, "Pepcus", "Software", "PEP"));
 		companyList.add(createCompany(2, "ThinkHR", "Service Provider", "THR"));
 		companyList.add(createCompany(3, "ICICI", "Banking", "ICICI"));
-		Pageable pageable = companyService.getPageable(OFFSET, LIMIT, SORT_BY);
+		Pageable pageable = getPageable(OFFSET, LIMIT, SORT_BY, defaultSortField);
 		Specification<Company> spec = null;
     	if(SEARCH_SPEC != null && SEARCH_SPEC.trim() != "") {
     		spec = new CompanySearchSpecification(SEARCH_SPEC);
