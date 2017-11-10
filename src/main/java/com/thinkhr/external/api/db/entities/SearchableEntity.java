@@ -10,4 +10,5 @@ import java.util.List;
  */
 public interface SearchableEntity {
     public List<String> getSearchFields();
+    
 }

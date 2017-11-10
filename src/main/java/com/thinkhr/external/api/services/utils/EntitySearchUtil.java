@@ -5,11 +5,25 @@ import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_LIMIT;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_OFFSET;
 import static com.thinkhr.external.api.ApplicationConstants.DESENDING;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.domain.Specification;
 
+import com.thinkhr.external.api.db.entities.Company;
+import com.thinkhr.external.api.db.entities.SearchableEntity;
+import com.thinkhr.external.api.exception.APIErrorCodes;
+import com.thinkhr.external.api.exception.ApplicationException;
+import com.thinkhr.external.api.services.EntitySearchSpecification;
 import com.thinkhr.external.api.services.OffsetPageRequest;
 
 /**
@@ -70,4 +84,82 @@ public class EntitySearchUtil {
     	String sortDirection =  sortedBy.substring(0,1);
     	return DESENDING.equalsIgnoreCase(sortDirection) ? Direction.DESC : Direction.ASC;
 	}
+
+    /**
+     * @return
+     */
+    public static Set<String> getSortAndLimitRequestParams() {
+    	String requestParams[] = {"offset", "limit", "sort", "searchSpec"};
+    	return new HashSet<String>(Arrays.asList(requestParams));
+    }
+    
+	/**
+	 * To validate given Class has field with fieldName or not
+	 * @param kclass
+	 * @param fieldName
+	 * @return
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 */
+	public static boolean classHasField(Class kclass, String fieldName) {
+		try {
+			Field field = kclass.getDeclaredField(fieldName);
+			if (field == null) {
+				return false;
+			}
+		} catch(NoSuchFieldException | SecurityException ex) {
+			return false;
+		}
+
+		return true;
+	}
+	
+	/**
+	 * To filter request parameters on field Name
+	 * @param allRequestParams
+	 * @param kclass
+	 * @return 
+	 */
+	public static Map<String, String> extractParametersForFilterRecords(Map<String, String> allRequestParams,
+			Class<Company> kclass) throws ApplicationException {
+		    Set<String> excludedParams = getSortAndLimitRequestParams();
+		    
+		    Map<String, String> filteredParameters = new HashMap<String, String>();
+		    for(Entry<String, String> entry : allRequestParams.entrySet()) { 
+		    	if (excludedParams.contains(entry.getKey())) {
+		    	     continue;
+		        } else if (!classHasField(kclass, entry.getKey())) {
+                     throw ApplicationException.createBadRequest(APIErrorCodes.REQUEST_PARAM_INVALID, entry.getKey(), kclass.getName());
+		        } 
+		    	filteredParameters.put(entry.getKey(), entry.getValue());
+		    }
+		    
+		    return filteredParameters;
+	}
+	
+    /**
+     * Create Entity Search Specification
+     * It will give priority over requestParameters on searchSpec
+     * @param searchSpec
+     * @param requestParameters
+     * @return
+     * @throws ApplicationException 
+     */
+    public static Specification<Company> getEntitySearchSpecification(String searchSpec,
+    		Map<String, String> requestParameters, Class kclass, SearchableEntity entity) throws ApplicationException {
+    	
+    	//To get any other requestParameter like Company's fieldName to filter record on filterName with this case we will ignore searchSpec.
+    	Map<String, String> requestParametersForFilterRecords = EntitySearchUtil.extractParametersForFilterRecords(requestParameters, Company.class);
+    	if (requestParametersForFilterRecords != null && !requestParametersForFilterRecords.isEmpty()) {
+    		return new EntitySearchSpecification(requestParametersForFilterRecords, entity);
+    	} 
+
+    	if (StringUtils.isNotBlank(searchSpec)) {
+    		return new EntitySearchSpecification (searchSpec, entity);
+    	}
+    	
+    	return null;
+    }
+
+
 }

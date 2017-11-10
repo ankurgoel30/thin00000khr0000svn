@@ -52,7 +52,6 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.CompanyRepository;
-import com.thinkhr.external.api.services.CompanyService;
 import com.thinkhr.external.api.services.EntitySearchSpecification;
 
 /**
@@ -77,9 +76,6 @@ public class CompanyControllerTest {
 	private CompanyRepository companyRepository;
 	
 	@Autowired
-	private CompanyService companyService;
-	
-	@Autowired
     private WebApplicationContext wac;
 	
 	private String defaultSortField = "+companyName";
@@ -101,7 +97,7 @@ public class CompanyControllerTest {
 
 		List<Company> companyList = singletonList(Company);
 
-		given(companyController.getAllCompany(null, null, null, null)).willReturn(companyList);
+		given(companyController.getAllCompany(null, null, null, null, null)).willReturn(companyList);
 		
 		mockMvc.perform(get(COMPANY_API_BASE_PATH)
 			   .accept(MediaType.APPLICATION_JSON))
@@ -249,7 +245,7 @@ public class CompanyControllerTest {
 		
 		List<Company> companyList = null;
 
-		given(companyController.getAllCompany(null, null, null, null)).willReturn(companyList);
+		given(companyController.getAllCompany(null, null, null, null, null)).willReturn(companyList);
 		
 		mockMvc.perform(get(COMPANY_API_BASE_PATH)
 			   .accept(MediaType.APPLICATION_JSON))
@@ -269,7 +265,7 @@ public class CompanyControllerTest {
 		
 		List<Company> companyList = singletonList(createCompany());
 
-		given(companyController.getAllCompany(null, null, null, null)).willThrow(new JDBCException("Internal Server Error", new SQLException("Database Error"))); 
+		given(companyController.getAllCompany(null, null, null, null, null)).willThrow(new JDBCException("Internal Server Error", new SQLException("Database Error"))); 
 		
 		mockMvc.perform(get(COMPANY_API_BASE_PATH)
 			   .accept(MediaType.APPLICATION_JSON))
