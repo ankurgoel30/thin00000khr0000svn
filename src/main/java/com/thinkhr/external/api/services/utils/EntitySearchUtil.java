@@ -19,7 +19,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 
-import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.db.entities.SearchableEntity;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
@@ -120,8 +119,8 @@ public class EntitySearchUtil {
 	 * @param kclass
 	 * @return 
 	 */
-	public static Map<String, String> extractParametersForFilterRecords(Map<String, String> allRequestParams,
-			Class<Company> kclass) throws ApplicationException {
+	public static <T> Map<String, String> extractParametersForFilterRecords(Map<String, String> allRequestParams,
+			Class<T> kclass) throws ApplicationException {
 		    Set<String> excludedParams = getSortAndLimitRequestParams();
 		    
 		    Map<String, String> filteredParameters = new HashMap<String, String>();
@@ -145,11 +144,12 @@ public class EntitySearchUtil {
      * @return
      * @throws ApplicationException 
      */
-    public static Specification<Company> getEntitySearchSpecification(String searchSpec,
-    		Map<String, String> requestParameters, Class kclass, SearchableEntity entity) throws ApplicationException {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> Specification<T> getEntitySearchSpecification(String searchSpec,
+    		Map<String, String> requestParameters, Class<T> kclass, SearchableEntity entity) throws ApplicationException {
     	
     	//To get any other requestParameter like Company's fieldName to filter record on filterName with this case we will ignore searchSpec.
-    	Map<String, String> requestParametersForFilterRecords = EntitySearchUtil.extractParametersForFilterRecords(requestParameters, Company.class);
+    	Map<String, String> requestParametersForFilterRecords = EntitySearchUtil.extractParametersForFilterRecords(requestParameters, kclass);
     	if (requestParametersForFilterRecords != null && !requestParametersForFilterRecords.isEmpty()) {
     		return new EntitySearchSpecification(requestParametersForFilterRecords, entity);
     	} 
