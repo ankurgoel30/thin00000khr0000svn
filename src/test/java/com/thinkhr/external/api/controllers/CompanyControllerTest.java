@@ -111,7 +111,8 @@ public class CompanyControllerTest {
 	}
 	
 	/**
-	 * Test to verify get all companies when no parameters (default) are provided.  
+	 * Test to verify get all companies when no parameters are provided 
+	 * i.e., all parameters are default provided.  
 	 * 
 	 * @throws Exception
 	 */
@@ -136,7 +137,8 @@ public class CompanyControllerTest {
 	}
 	
 	/**
-	 * Test to verify get all companies when specific parameters are provided.  
+	 * Test to verify get all companies when searchSpec is default and all other 
+	 * parameters are provided (sort is ascending)  
 	 * 
 	 * @throws Exception
 	 */
@@ -149,7 +151,7 @@ public class CompanyControllerTest {
 			companyRepository.save(company);
 		}
 		String searchSpec = null;
-		Pageable pageable = getPageable(3, 3, "companyType", defaultSortField);
+		Pageable pageable = getPageable(3, 3, "+companyType", defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
@@ -161,7 +163,7 @@ public class CompanyControllerTest {
 	}
 	
 	/**
-	 * Test to verify get all companies when specific parameters are provided.  
+	 * Test to verify get all companies searchSpec is provided and other parameters are default.  
 	 * 
 	 * @throws Exception
 	 */
@@ -186,20 +188,47 @@ public class CompanyControllerTest {
 	}
 	
 	/**
-	 * Test to verify get all companies when specific parameters are provided.  
+	 * Test to verify get all companies when all parameters are provided 
+	 * and sort is ascending   
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void testAllCompaniesWithParams() throws Exception {
+	public void testAllCompaniesWithParamsAndAscSort() throws Exception {
 		
 		List<Company> companyList = createCompanies();
 
 		for (Company company : companyList) {
 			companyRepository.save(company);
 		}
-		String searchSpec = "fifth";
-		Pageable pageable = getPageable(3, 3, "companyType", defaultSortField);
+		String searchSpec = "General";
+		Pageable pageable = getPageable(3, 3, "+companyType", defaultSortField);
+    	Specification<Company> spec = null;
+    	if(StringUtils.isNotBlank(searchSpec)) {
+    		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
+    	}
+    	Page<Company> companies  = (Page<Company>) companyRepository.findAll(spec, pageable);
+    	
+    	assertNotNull(companies.getContent());
+    	assertEquals(companies.getContent().size(), 3);
+	}
+	
+	/**
+	 * Test to verify get all companies when all parameters are provided
+	 * and sort is descending.  
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testAllCompaniesWithParamsAndDescSort() throws Exception {
+		
+		List<Company> companyList = createCompanies();
+
+		for (Company company : companyList) {
+			companyRepository.save(company);
+		}
+		String searchSpec = "Suzuki";
+		Pageable pageable = getPageable(3, 3, "-companyType", defaultSortField);
     	Specification<Company> spec = null;
     	if(StringUtils.isNotBlank(searchSpec)) {
     		spec = new EntitySearchSpecification<Company>(searchSpec, new Company());
