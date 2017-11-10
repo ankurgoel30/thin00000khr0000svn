@@ -1,9 +1,11 @@
 package com.thinkhr.external.api.services;
 
+import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getEntitySearchSpecification;
+import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageable;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.thinkhr.external.api.services.utils.EntitySearchUtil.*;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -41,14 +43,11 @@ public class UserService extends CommonService {
      * @param String searchSpec Search string for filtering results
      * @return List<User> object 
      */
-    public List<User> getAllUser(Integer offset,Integer limit ,String sortField,String searchSpec) {
+    public List<User> getAllUser(Integer offset,Integer limit ,String sortField,String searchSpec,Map<String, String> requestParameters) throws ApplicationException  {
     	List<User> users = new ArrayList<User>();
 
     	Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
-    	Specification<User> spec = null;
-    	if(searchSpec != null && searchSpec.trim() != "") {
-    		spec = new EntitySearchSpecification<User>(searchSpec, new User());
-    	}
+    	Specification<User> spec = getEntitySearchSpecification(searchSpec, requestParameters, User.class, new User());
     	Page<User> userList  = (Page<User>) userRepository.findAll(spec,pageable);
 
     	userList.getContent().forEach(c -> users.add(c));

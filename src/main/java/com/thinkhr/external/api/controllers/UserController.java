@@ -1,6 +1,7 @@
 package com.thinkhr.external.api.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -39,8 +40,9 @@ public class UserController {
     @RequestMapping(method=RequestMethod.GET)
     List<User> getAllUser(@RequestParam(value = "offset", required = false) Integer offset,
     		@RequestParam(value = "limit", required = false) Integer limit,@RequestParam(value = "sort" , required = false) String sort,
-    		@RequestParam(value = "searchSpec" , required = false) String searchSpec){
-        return userService.getAllUser(offset,limit,sort,searchSpec);
+    		@RequestParam(value = "searchSpec" , required = false) String searchSpec,
+    		@RequestParam Map<String, String> allRequestParams) throws ApplicationException {
+        return userService.getAllUser(offset,limit,sort,searchSpec,allRequestParams);
     }
     
     /**
