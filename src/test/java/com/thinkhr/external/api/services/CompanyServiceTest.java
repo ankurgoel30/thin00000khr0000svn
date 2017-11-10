@@ -68,8 +68,14 @@ public class CompanyServiceTest {
 		
 		when(companyRepository.findAll(null, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
 
-		List<Company> result = companyService.getAllCompany(null, null, null, null);
-		assertEquals(3, result.size());
+		List<Company> result;
+		try {
+			result = companyService.getAllCompany(null, null, null, null, null);
+			assertEquals(3, result.size());
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -89,8 +95,15 @@ public class CompanyServiceTest {
     	}
 		when(companyRepository.findAll(spec, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
 
-		List<Company> result = companyService.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC);
-		assertEquals(3, result.size());
+		List<Company> result;
+		try {
+			result = companyService.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC, null);
+			assertEquals(3, result.size());
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 	
 	/**

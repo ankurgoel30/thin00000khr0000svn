@@ -1,5 +1,6 @@
 package com.thinkhr.external.api.db.entities;
 
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;

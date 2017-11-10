@@ -1,6 +1,7 @@
 package com.thinkhr.external.api.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -18,6 +19,7 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.services.CompanyService;
+import com.thinkhr.external.api.services.utils.EntitySearchUtil;
 
 
 /**
@@ -40,13 +42,15 @@ public class CompanyController {
      * List all companies from repository
      * 
      * @return List<Company>
+     * @throws ApplicationException 
      * 
      */
     @RequestMapping(method=RequestMethod.GET)
     public List<Company> getAllCompany(@RequestParam(value = "offset", required = false) Integer offset,
     		@RequestParam(value = "limit", required = false) Integer limit,@RequestParam(value = "sort" , required = false) String sort,
-    		@RequestParam(value = "searchSpec" , required = false) String searchSpec){
-    	return companyService.getAllCompany(offset,limit,sort,searchSpec);
+    		@RequestParam(value = "searchSpec" , required = false) String searchSpec, 
+    		@RequestParam Map<String, String> allRequestParams) throws ApplicationException {
+    		return companyService.getAllCompany(offset, limit, sort, null, allRequestParams); 
     }
     
     /**
