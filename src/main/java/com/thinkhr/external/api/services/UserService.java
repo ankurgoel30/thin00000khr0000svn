@@ -3,6 +3,8 @@ package com.thinkhr.external.api.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.thinkhr.external.api.services.utils.EntitySearchUtil.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -14,7 +16,6 @@ import com.thinkhr.external.api.db.entities.User;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.UserRepository;
-import com.thinkhr.external.api.services.util.EntitySearchSpecification;
 
 /**
 * The UserService class provides a collection of all
@@ -43,7 +44,7 @@ public class UserService extends CommonService {
     public List<User> getAllUser(Integer offset,Integer limit ,String sortField,String searchSpec) {
     	List<User> users = new ArrayList<User>();
 
-    	Pageable pageable = getPageable(offset, limit, sortField);
+    	Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
     	Specification<User> spec = null;
     	if(searchSpec != null && searchSpec.trim() != "") {
     		spec = new EntitySearchSpecification<User>(searchSpec, new User());
