@@ -208,11 +208,6 @@ public class User implements SearchableEntity {
 		searchColumns.add("fax");
 		searchColumns.add("email");
 		searchColumns.add("clientName");
-		
-		searchColumns.add("firstName");
-		searchColumns.add("fax");
-		searchColumns.add("email");
-		searchColumns.add("clientName");
 		return searchColumns;
 	}
 }

@@ -1,6 +1,5 @@
 package com.thinkhr.external.api.db.entities;
 
-import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -89,7 +88,7 @@ public class Company implements SearchableEntity {
 	private String companyHours;
 	
 	@Column(name = "issuesBroker") 
-	private Integer issuesBroker;
+	private String issuesBroker;
 	
 	@Column(name = "issuesClient") 
 	private Integer issuesCompany;
