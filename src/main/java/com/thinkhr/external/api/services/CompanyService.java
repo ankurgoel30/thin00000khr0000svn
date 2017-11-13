@@ -62,11 +62,17 @@ public class CompanyService  extends CommonService {
     	
     	Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
 
+
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec, pageable);
 
     	companyList.getContent().forEach(c -> companies.add(c));
     	
     	return companies;
+    }
+	
+	public long getTotalRecords(String searchSpec, Map<String, String> requestParameters) throws ApplicationException {
+    	Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
+    	return companyRepository.count(spec);
     }
     
 	/**

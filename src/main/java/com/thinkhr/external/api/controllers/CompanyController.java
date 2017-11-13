@@ -50,6 +50,7 @@ public class CompanyController {
     		@RequestParam(value = "limit", required = false) Integer limit,@RequestParam(value = "sort" , required = false) String sort,
     		@RequestParam(value = "searchSpec" , required = false) String searchSpec, 
     		@RequestParam Map<String, String> allRequestParams) throws ApplicationException {
+    		long totalRecords =  companyService.getTotalRecords(searchSpec, allRequestParams);
     		return companyService.getAllCompany(offset, limit, sort, searchSpec, allRequestParams); 
     }
     
