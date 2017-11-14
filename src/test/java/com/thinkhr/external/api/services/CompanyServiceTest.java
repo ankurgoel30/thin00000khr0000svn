@@ -8,6 +8,7 @@ import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,14 +69,14 @@ public class CompanyServiceTest {
 		
 		when(companyRepository.findAll(null, pageable)).thenReturn(new PageImpl<Company>(companyList, pageable, companyList.size()));
 
-		List<Company> result;
 		try {
-			result = companyService.getAllCompany(null, null, null, null, null);
+			List<Company> result =  companyService.getAllCompany(null, null, null, null, null);
 			assertEquals(3, result.size());
-		} catch (ApplicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (ApplicationException ex) {
+			fail("Not expected exception");
 		}
+		
+		//TODO: ADD MORE test cases to verify limit, offset, sort and other search parameters.
 	}
 	
 	/**
@@ -100,8 +101,7 @@ public class CompanyServiceTest {
 			result = companyService.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC, null);
 			assertEquals(3, result.size());
 		} catch (ApplicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fail("Not expecting application exception for a valid test case");
 		}
 
 	}
@@ -165,6 +165,7 @@ public class CompanyServiceTest {
 		try {
 			result = companyService.updateCompany(company);
 		} catch (ApplicationException e) {
+			fail("Not expecting application exception for a valid test case");
 		}
 		assertEquals(companyId, result.getCompanyId());
 		assertEquals("Pepcus", result.getCompanyName());
