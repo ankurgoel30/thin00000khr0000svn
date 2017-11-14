@@ -49,7 +49,7 @@ public class EntitySearchUtil {
     	offset = offset == null ? DEFAULT_OFFSET : offset;
     	limit = limit == null ? DEFAULT_LIMIT : limit;
     	
-    	sortedBy = StringUtils.isBlank(sortedBy) ? defaultSortedBy : sortedBy;
+    	sortedBy = StringUtils.isBlank(sortedBy) ? defaultSortedBy : sortedBy.trim();
 
     	Sort.Direction sortDirection = getSortDirection(sortedBy);
     	
@@ -98,7 +98,7 @@ public class EntitySearchUtil {
      * @return
      */
     public static Direction getSortDirection(String sortedBy) {
-    	String sortDirection =  sortedBy.substring(0,1);
+    	String sortDirection =  sortedBy.substring(0, 1);
     	return DESENDING.equalsIgnoreCase(sortDirection) ? Direction.DESC : Direction.ASC;
 	}
 

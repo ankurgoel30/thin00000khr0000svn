@@ -53,6 +53,12 @@ public class CompanyController {
     		@RequestParam(value = "searchSpec", required = false) String searchSpec, 
     		@RequestParam Map<String, String> allRequestParams) 
     				throws ApplicationException {
+    		if (limit != null && limit <= 0) {
+    			throw ApplicationException.createBadRequest(APIErrorCodes.REQUEST_PARAM_INVALID, "limit=" + limit);
+    		}
+    		if (offset != null && offset < 0) {
+    			throw ApplicationException.createBadRequest(APIErrorCodes.REQUEST_PARAM_INVALID, "offset=" + offset);
+    		}
     		return companyService.getAllCompany(offset, limit, sort, searchSpec, allRequestParams); 
     }
     
