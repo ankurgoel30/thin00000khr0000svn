@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -62,18 +63,13 @@ public class CompanyService  extends CommonService {
     	
     	Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
 
-
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec, pageable);
 
     	companyList.getContent().forEach(c -> companies.add(c));
     	
     	return companies;
     }
-	
-	public long getTotalRecords(String searchSpec, Map<String, String> requestParameters) throws ApplicationException {
-    	Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
-    	return companyRepository.count(spec);
-    }
+
     
 	/**
      * Fetch specific company from database
