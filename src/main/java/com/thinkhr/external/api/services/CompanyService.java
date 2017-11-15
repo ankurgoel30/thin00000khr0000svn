@@ -1,16 +1,18 @@
 package com.thinkhr.external.api.services;
 
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
+import static com.thinkhr.external.api.ApplicationConstants.MAX_RECORDS_COMPANY_CSV_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.REQUIRED_HEADERS_COMPANY_CSV_IMPORT;
+import static com.thinkhr.external.api.ApplicationConstants.SPACE;
 import static com.thinkhr.external.api.ApplicationConstants.VALID_FILE_EXTENSION_IMPORT;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getEntitySearchSpecification;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -142,22 +144,20 @@ public class CompanyService  extends CommonService {
 
 	public void importFile(MultipartFile fileToImport) throws ApplicationException {
 		String fileName = fileToImport.getOriginalFilename();
+		
+		// Validate if file has valid extension
 		if(!FileImportUtil.hasValidExtension(fileName,VALID_FILE_EXTENSION_IMPORT))  {
 			throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_FILE_EXTENTION,fileName,VALID_FILE_EXTENSION_IMPORT);
 		}
 
 		if (fileToImport.isEmpty()) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT,fileToImport.getOriginalFilename());
+			throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT,fileName);
 		} 
 
-//		BufferedReader br;
-//			br = new BufferedReader(new InputStreamReader(fileToImport.getInputStream()));
-//			String headerLine = br.readLine();
-//			br.re
-//			String[] headers = headerLine.split(",");
+		// Read all lines from file
+		List<String> result = FileImportUtil.readFileContent(fileToImport);
 		
-		List<String> result = readFileContent(fileToImport);
-		
+		// Validate for missing headers
 		String[] headers = result.get(0).split(",");
 		String[] missingHeadersIfAny = FileImportUtil.getMissingHeaders(headers, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
 		if(missingHeadersIfAny.length !=0 ) {
@@ -166,32 +166,115 @@ public class CompanyService  extends CommonService {
 			throw ApplicationException.createFileImportError(APIErrorCodes.MISSING_REQUIRED_HEADERS,fileName, missingHeaders ,requiredHeaders);
 		}
 		
+		// If we are here then file is a valid csv file with all the required headers. 
+		// Now  validate if it has records and number of records not exceed max allowed records
+		int numOfRecords = result.size() - 1 ; // as first line is for header
+		if(numOfRecords == 0 ) {
+			throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT,fileName);
+		}
+		if (numOfRecords > MAX_RECORDS_COMPANY_CSV_IMPORT) {
+			throw ApplicationException.createFileImportError(APIErrorCodes.MAX_RECORD_EXCEEDED,String.valueOf(MAX_RECORDS_COMPANY_CSV_IMPORT));
+		}
+		
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
-		fileDataRepository.save(result);
+		Map<String,Company> fileRecordToObjMap =  new LinkedHashMap<String,Company>(result.size());
+		List<Company> companies = new ArrayList<Company>();
+		for (String record : result.subList(1, result.size())) {
+			try { 
+				Company company =  getCompanyFromFileRecord( headers , record);
+				fileRecordToObjMap.put(record, company);
+				companies.add(company);
+			} catch  (NoSuchFieldException | IllegalArgumentException | IllegalAccessException ex) { // Ideally these exceptions should not occur
+				fileRecordToObjMap.put(record, null);
+			}
+		}
+		
+		List<String> duplicateSkippedRecords = new ArrayList<String>(); // List to maintain duplicate records on the basis of companyName
+		int numOfSuccessRecords = 0;
+		int numOfFailedRecords = 0;
+		//TODO : Uncomment this code
+		/*for(String record : fileRecordToObjMap.keySet()) {
+			Set<String> companyNames = new HashSet<String>() ;
+			Company company = fileRecordToObjMap.get(record);
+			if (companyNames.contains(company.getCompanyName())) {
+				// skip the record for save and add it to duplicateReocords list
+				duplicateSkippedRecords.add(record);
+				numOfFailedRecords++;
+			} else {
+				try { 
+					this.addCompany(company);
+					companyNames.add(company.getCompanyName());
+					numOfSuccessRecords++;
+				} catch (Exception ex ) {
+					//TODO : KEEP track of insertion failure for this record with reason
+					//ex.printStackTrace();
+					numOfFailedRecords++;
+				}
+				
+			}
+ 		}*/
+		
+		//TODO : Remove this code. This is just to get performance stats
+		for(Company company : companies) {
+			try { 
+				this.addCompany(company);
+				numOfSuccessRecords++;
+			} catch (Exception ex ) {
+				//TODO : KEEP track of insertion failure for this record with reason
+				//ex.printStackTrace();
+				numOfFailedRecords++;
+			}
+ 		}
+		
 		stopWatch.stop();
 		double totalCompletionTimeInSec = stopWatch.getTotalTimeSeconds();
 		System.out.println(totalCompletionTimeInSec);
+		System.out.println(numOfSuccessRecords);
+		System.out.println(numOfFailedRecords);
+	}
+	
+	private Company getCompanyFromFileRecord(String[] headers, String recordInCSV) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+		// Key is field of the class and value is list of headers mapped to a field.As multiple header may be mapped to a single field
+		Map<String,List<String>> fieldsToHeaderMap =  FileImportUtil.getFieldsToHeaderMapForCompanyCSV(); 
+		
+		Map<String,Integer> headerIndexMap =  new HashMap<String,Integer>();
+		for(int i=0; i< headers.length;i++) {
+			headerIndexMap.put(headers[i], i);
+		}
+		
+		String[] splitRecord = recordInCSV.split(",");
+		Company company = new Company();
+		for(String fieldName : fieldsToHeaderMap.keySet()) {
+			List<String> mappedHeaders = fieldsToHeaderMap.get(fieldName) ;
+			Class<Company> aClass = Company.class;
+			Field field =  aClass.getDeclaredField(fieldName);
+			StringBuffer fieldValue = new StringBuffer();
+			
+			// For each header that is mapped to a field in class get its value from the csv record and concat it by space
+			for(String headerInCsv : mappedHeaders) { 
+				int index = headerIndexMap.get(headerInCsv);
+				try {
+					fieldValue.append(splitRecord[index].trim());
+				} catch (ArrayIndexOutOfBoundsException ex) {// this can occur if record in csv does not have value corresponding to a column
+					break;
+				}
+				fieldValue.append(SPACE);// concat multiple headers values mapped to a single field by a space
+			}
+			field.setAccessible(true);
+			field.set(company, fieldValue.toString().trim());
+		}
+		
+		//Set dummy values for not null fields not available in csv for now
+		// TODO : to get update from businees on what to do for these fields
+		company.setCompanyType("unknown");
+		company.setSearchHelp("unknown");
+		company.setSpecialNote("unknown");
+		company.setCompanySince(new Date());
+ 		return company;
 	}
 	
 	
-	private List<String> readFileContent(MultipartFile file) {
-        BufferedReader br;
-        List<String> result = new ArrayList<>();
-        try {
-            String line;
-            InputStream is = file.getInputStream();
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                result.add(line);
-            }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-        }
-        return result;
-    }
-
-
 	/**
 	 * Return default sort field for company service
 	 * 
