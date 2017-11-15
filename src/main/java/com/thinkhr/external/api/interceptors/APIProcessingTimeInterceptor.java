@@ -11,7 +11,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 /**
- * Interceptor to log total time taken for processing each API request.
+ * Interceptor to log each API request's start time, end time
+ * and total time taken to process request
  * 
  * @author Surabhi Bhawsar
  * @since 2017-11-14
@@ -34,8 +35,9 @@ public class APIProcessingTimeInterceptor extends HandlerInterceptorAdapter {
 		
 		String jobId = UUID.randomUUID().toString();
 
-		logger.info("JobID:: " + jobId + " Request URL::" + request.getRequestURL().toString()
-				+ ":: Start Time=" + System.currentTimeMillis());
+		logger.info("###### Request JobID:: ##### " + jobId);
+		logger.info(" Request URL::" + request.getRequestURL().toString());
+		logger.info("API execution Start Time " + System.currentTimeMillis());
 		
 		request.setAttribute("startTime", startTime);
 		request.setAttribute("jobId", jobId);
@@ -53,8 +55,8 @@ public class APIProcessingTimeInterceptor extends HandlerInterceptorAdapter {
 			HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
 		
-		logger.info("Request URL::" + request.getRequestURL().toString()
-				+ " Sent to Handler :: Current Time=" + System.currentTimeMillis());
+		logger.info("Request URL::" + request.getRequestURL().toString());
+		logger.info("Sent to controller to process :: Current Time=" + System.currentTimeMillis());
 	}
 
 	/* (non-Javadoc)
@@ -69,10 +71,10 @@ public class APIProcessingTimeInterceptor extends HandlerInterceptorAdapter {
 		long startTime = (Long) request.getAttribute("startTime");
 		String jobId = (String) request.getAttribute("jobId");
 		
-		logger.info("JobID::" + jobId + " Request URL::" + request.getRequestURL().toString()
-				+ ":: End Time=" + System.currentTimeMillis());
-		logger.info("JobID::" + jobId +" Request URL::" + request.getRequestURL().toString()
-				+ ":: Time Taken=" + (System.currentTimeMillis() - startTime));
+		logger.info("###### Request JobID:: ##### " + jobId);
+		logger.info(" Request URL::" + request.getRequestURL().toString());
+		logger.info("API execution End Time " + System.currentTimeMillis());
+		logger.info(" Total Time taken to complete request :: Time Taken=" + (System.currentTimeMillis() - startTime));
 	}
 
 }
