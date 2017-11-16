@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thinkhr.external.api.db.entities.Company;
+import com.thinkhr.external.api.db.entities.User;
 
 /**
  * Utility class to keep all utilities required for Junits
@@ -30,7 +31,8 @@ public class ApiTestDataUtil {
 	public static final String COMPANY_API_REQUEST_PARAM_SEARCH_SPEC = "searchSpec";
 	public static final Integer OFFSET = 3;
     public static final Integer LIMIT = 3;
-    public static final String SORT_BY = "companyType";
+    public static final String COMPANY_SORT_BY = "+companyType";
+    public static final String USER_SORT_BY = "+userName";
     public static final String SEARCH_SPEC = null;
 
 	
@@ -68,6 +70,43 @@ public class ApiTestDataUtil {
 		company.setCompanyType(companyType);
 		company.setDisplayName(displayName);
 		return company;
+	}
+	
+	/**
+	 * Create a User entity for given inputs
+	 * 
+	 * @param contactId
+	 * @param firstName
+	 * @param lastName
+	 * @param searchHelp
+	 * @return
+	 */
+	public static User createUser(Integer contactId, String firstName, String lastName) {
+		User user = new User();
+		if (contactId != null) {
+			user.setContactId(contactId);
+		}
+		user.setFirstName(firstName);
+		user.setLastName(lastName);
+		return user;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static User createUser() {
+		User user = new User();
+		user.setContactId(1);
+		user.setFirstName("Pepcus");
+		user.setLastName("Software");
+		user.setSearchHelp("dummy help");
+		user.setUserName("pepcus");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated");
+		return user;
 	}
 	
 	/**
@@ -218,6 +257,77 @@ public class ApiTestDataUtil {
 		companies.add(company10);
 
 		return companies;
+	}
+	
+	/**
+	 * Create List for User objects
+	 * 
+	 * @return
+	 */
+	public static List<User> createUsers() {
+		List<User> users = new ArrayList<User>();
+	
+		User user = new User();
+		user.setContactId(1);
+		user.setFirstName("PEPCUS");
+		user.setLastName("Software");
+		user.setSearchHelp("dummy help pepcus");
+		user.setUserName("pepcus");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated"); 
+		users.add(user);
+		
+		user = new User();
+		user.setContactId(2);
+		user.setFirstName("THINKHR");
+		user.setLastName("Service Provider");
+		user.setSearchHelp("THR");
+		user.setUserName("thr");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated"); 
+		users.add(user);
+		
+		user = new User();
+		user.setContactId(3);
+		user.setFirstName("ICICI");
+		user.setLastName("Banking");
+		user.setSearchHelp("icici help");
+		user.setUserName("icici");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated"); 
+		users.add(user);
+		
+		user = new User();
+		user.setContactId(4);
+		user.setFirstName("ASI");
+		user.setLastName("Advisor Service Provider");
+		user.setSearchHelp("ASI");
+		user.setUserName("asi");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated"); 
+		users.add(user);
+		
+		user = new User();
+		user.setContactId(5);
+		user.setFirstName("Ajay");
+		user.setLastName("Jain");
+		user.setSearchHelp("dummy help");
+		user.setUserName("ajain");
+		user.setBlockedAccount(1);
+		user.setMkdate("dummyDate");
+		user.setCodevalid("dummyCode");
+		user.setUpdatePassword("updated"); 
+		users.add(user);
+		
+		return users;
 	}
 	
 	
