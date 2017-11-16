@@ -4,7 +4,7 @@ import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageab
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.LIMIT;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.OFFSET;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.SEARCH_SPEC;
-import static com.thinkhr.external.api.utils.ApiTestDataUtil.SORT_BY;
+import static com.thinkhr.external.api.utils.ApiTestDataUtil.COMPANY_SORT_BY;
 import static com.thinkhr.external.api.utils.ApiTestDataUtil.createCompany;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -89,7 +89,7 @@ public class CompanyServiceTest {
 		companyList.add(createCompany(1, "Pepcus", "Software", "PEP"));
 		companyList.add(createCompany(2, "ThinkHR", "Service Provider", "THR"));
 		companyList.add(createCompany(3, "ICICI", "Banking", "ICICI"));
-		Pageable pageable = getPageable(OFFSET, LIMIT, SORT_BY, defaultSortField);
+		Pageable pageable = getPageable(OFFSET, LIMIT, COMPANY_SORT_BY, defaultSortField);
 		Specification<Company> spec = null;
     	if(SEARCH_SPEC != null && SEARCH_SPEC.trim() != "") {
     		spec = new EntitySearchSpecification(SEARCH_SPEC, new Company());
@@ -98,7 +98,7 @@ public class CompanyServiceTest {
 
 		List<Company> result;
 		try {
-			result = companyService.getAllCompany(OFFSET, LIMIT, SORT_BY, SEARCH_SPEC, null);
+			result = companyService.getAllCompany(OFFSET, LIMIT, COMPANY_SORT_BY, SEARCH_SPEC, null);
 			assertEquals(3, result.size());
 		} catch (ApplicationException e) {
 			fail("Not expecting application exception for a valid test case");
