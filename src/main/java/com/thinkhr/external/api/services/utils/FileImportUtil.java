@@ -23,72 +23,69 @@ public class FileImportUtil {
 	 * @param String[] requiredHeaders
 	 * @return String[] Array of missing headers 
 	 */
-	public static String[] getMissingHeaders(String[] presentHeaders,String[] requiredHeaders) {
-		Set<String> headersInFileSet=  new HashSet<String>(Arrays.asList(presentHeaders));
+	public static String[] getMissingHeaders(String[] presentHeaders, String[] requiredHeaders) {
+		Set<String> headersInFileSet = new HashSet<String>(Arrays.asList(presentHeaders));
 		Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(requiredHeaders));
 		requiredHeadersSet.removeAll(headersInFileSet);
-		
+
 		String[] missingHeaders = new String[requiredHeadersSet.size()];
 		return requiredHeadersSet.toArray(missingHeaders);
 	}
 
-	public static boolean hasValidExtension(String fileName,String... validExtention) {
+	public static boolean hasValidExtension(String fileName, String... validExtention) {
 		return FilenameUtils.isExtension(fileName, validExtention);
 	}
-	
-	public static List<String> readFileContent(MultipartFile file) {
-        BufferedReader br;
-        List<String> result = new ArrayList<>();
-        try {
-            String line;
-            InputStream is = file.getInputStream();
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                result.add(line);
-            }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-        }
-        return result;
-    }
 
-	public static Map<String,List<String>> getFieldsToHeaderMapForCompanyCSV() {
-		Map<String,List<String>> fieldsToHeaderMap = new LinkedHashMap<String,List<String>>();
-		
+	public static List<String> readFileContent(MultipartFile file) throws IOException {
+		BufferedReader br;
+		List<String> result = new ArrayList<>();
+		String line;
+		InputStream is = file.getInputStream();
+		br = new BufferedReader(new InputStreamReader(is));
+		while ((line = br.readLine()) != null) {
+			result.add(line);
+		}
+		return result;
+	}
+
+	public static Map<String, List<String>> getFieldsToHeaderMapForCompanyCSV() {
+		Map<String, List<String>> fieldsToHeaderMap = new LinkedHashMap<String, List<String>>();
+
 		//clientName
-		fieldsToHeaderMap.put("companyName" , Arrays.asList(new String[] {"CLIENT_NAME"}) );
-		
+		fieldsToHeaderMap.put("companyName", Arrays.asList(new String[] { "CLIENT_NAME" }));
+
 		//displayName
-		fieldsToHeaderMap.put("displayName" , Arrays.asList(new String[] {"DISPLAY_NAME"})  );
-		
+		fieldsToHeaderMap.put("displayName", Arrays.asList(new String[] { "DISPLAY_NAME" }));
+
 		//companyPhone
-		fieldsToHeaderMap.put("companyPhone" , Arrays.asList(new String[] {"PHONE"})  );
-		
+		fieldsToHeaderMap.put("companyPhone", Arrays.asList(new String[] { "PHONE" }));
+
 		///officeLocation
-		fieldsToHeaderMap.put("officeLocation" , Arrays.asList(new String[] {"ADDRESS","ADDRESS2","CITY","STATE","ZIP"})  );
-		
+		fieldsToHeaderMap.put("officeLocation",
+				Arrays.asList(new String[] { "ADDRESS", "ADDRESS2", "CITY", "STATE", "ZIP" }));
+
 		//industry
-		fieldsToHeaderMap.put("industry" , Arrays.asList(new String[] {"INDUSTRY"})  );
-		
+		fieldsToHeaderMap.put("industry", Arrays.asList(new String[] { "INDUSTRY" }));
+
 		//companySize
-		fieldsToHeaderMap.put("companySize" , Arrays.asList(new String[] {"COMPANY_SIZE"})  );
-		
+		fieldsToHeaderMap.put("companySize", Arrays.asList(new String[] { "COMPANY_SIZE" }));
+
 		//producer
-		fieldsToHeaderMap.put("producer" , Arrays.asList(new String[] {"PRODUCER"})  );
-		
+		fieldsToHeaderMap.put("producer", Arrays.asList(new String[] { "PRODUCER" }));
+
 		//custom1
-		fieldsToHeaderMap.put("custom1" , Arrays.asList(new String[] {"BUSINESS_ID"})  );
-		
+		fieldsToHeaderMap.put("custom1", Arrays.asList(new String[] { "BUSINESS_ID" }));
+
 		//custom2
-		fieldsToHeaderMap.put("custom2" , Arrays.asList(new String[] {"BRANCH_ID"})  );
-		
+		fieldsToHeaderMap.put("custom2", Arrays.asList(new String[] { "BRANCH_ID" }));
+
 		//custom3
-		fieldsToHeaderMap.put("custom3" , Arrays.asList(new String[] {"CLIENT_ID"})  );
-		
+		fieldsToHeaderMap.put("custom3", Arrays.asList(new String[] { "CLIENT_ID" }));
+
 		//custom4
-		fieldsToHeaderMap.put("custom4" , Arrays.asList(new String[] {"CLIENT_TYPE"})  );
-		
+		fieldsToHeaderMap.put("custom4", Arrays.asList(new String[] { "CLIENT_TYPE" }));
+
 		return fieldsToHeaderMap;
 	}
-	
+
 }
