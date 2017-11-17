@@ -25,6 +25,7 @@ import com.thinkhr.external.api.db.entities.User;
 public class ApiTestDataUtil {
 
 	public static final String COMPANY_API_BASE_PATH = "/v1/companies/";
+	public static final String USER_API_BASE_PATH = "/v1/users/";
 	public static final String COMPANY_API_REQUEST_PARAM_OFFSET = "offset";
 	public static final String COMPANY_API_REQUEST_PARAM_LIMIT = "limit";
 	public static final String COMPANY_API_REQUEST_PARAM_SORT = "sort";
@@ -121,6 +122,17 @@ public class ApiTestDataUtil {
 	}
 	
 	/**
+	 * Creates a user response object
+	 * 
+	 * @param user
+	 * @param httpStatus
+	 * @return
+	 */
+	public static ResponseEntity<User> createUserResponseEntity(User user, HttpStatus httpStatus) {
+		return new ResponseEntity<User>(user, httpStatus);
+	}
+	
+	/**
 	 * createCompanyIdResponseEntity
 	 * 
 	 * @param companyId
@@ -129,6 +141,17 @@ public class ApiTestDataUtil {
 	 */
 	public static ResponseEntity<Integer> createCompanyIdResponseEntity(Integer companyId, HttpStatus httpStatus) {
 		return new ResponseEntity<Integer>(companyId, httpStatus);
+	}
+	
+	/**
+	 * createContactIdResponseEntity
+	 * 
+	 * @param contactId
+	 * @param httpStatus
+	 * @return
+	 */
+	public static ResponseEntity<Integer> createContactIdResponseEntity(Integer contactId, HttpStatus httpStatus) {
+		return new ResponseEntity<Integer>(contactId, httpStatus);
 	}
 
 	/**
