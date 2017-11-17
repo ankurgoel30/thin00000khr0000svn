@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
+import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.services.CompanyService;
 
 
@@ -127,7 +128,7 @@ public class CompanyController {
      * @param Multipart file
      */
     @RequestMapping(method=RequestMethod.POST,  value="/import")
-    public void importFile(@RequestParam("file") MultipartFile file) throws ApplicationException {
-    	companyService.importFile(file);
+    public FileImportResult importFile(@RequestParam("file") MultipartFile file) throws ApplicationException {
+        return companyService.importFile(file);
     }
 }

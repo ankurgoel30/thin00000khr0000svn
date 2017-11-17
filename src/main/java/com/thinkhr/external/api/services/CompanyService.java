@@ -51,13 +51,13 @@ import com.thinkhr.external.api.services.utils.FileImportUtil;
 */
 
 @Service
-public class CompanyService  extends CommonService {
-	
-	private Logger logger = LoggerFactory.getLogger(CompanyService.class);
-	@Autowired
-	private CompanyRepository companyRepository;
-	@Autowired
-	private FileDataRepository fileDataRepository;
+public class CompanyService extends CommonService {
+
+    private Logger logger = LoggerFactory.getLogger(CompanyService.class);
+    @Autowired
+    private CompanyRepository companyRepository;
+    @Autowired
+    private FileDataRepository fileDataRepository;
 
     /**
      * To fetch companies records. Based on given parameters companies records will be filtered out.
@@ -74,270 +74,241 @@ public class CompanyService  extends CommonService {
     		Integer limit,
     		String sortField, 
     		String searchSpec, 
-    		Map<String, String> requestParameters) throws ApplicationException {
-    	
-    	List<Company> companies = new ArrayList<Company>();
+            Map<String, String> requestParameters) throws ApplicationException {
 
-    	Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
-    	
-		if(logger.isDebugEnabled()) {
-			logger.debug("Request parameters to filter, size and paginate records ");
-			if (requestParameters != null) {
+        List<Company> companies = new ArrayList<Company>();
+
+        Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Request parameters to filter, size and paginate records ");
+            if (requestParameters != null) {
 				requestParameters.entrySet().stream().forEach(entry -> { logger.debug(entry.getKey() + ":: " + entry.getValue()); });
-			}
-		}
+            }
+        }
 
-    	
-    	Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
+        Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
 
     	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec, pageable);
 
-    	companyList.getContent().forEach(c -> companies.add(c));
-    	
-    	//Get and set the total number of records
+        companyList.getContent().forEach(c -> companies.add(c));
+
+        //Get and set the total number of records
         setRequestAttribute(TOTAL_RECORDS, companyRepository.count());
-        
-    	return companies;
+
+        return companies;
     }
 
-    
-	/**
+    /**
      * Fetch specific company from database
      * 
      * @param companyId
      * @return Company object 
      */
     public Company getCompany(Integer companyId) {
-    	return companyRepository.findOne(companyId);
+        return companyRepository.findOne(companyId);
     }
-    
+
     /**
      * Add a company in database
      * 
      * @param company object
      */
-    public Company addCompany(Company company)  {
-    	return companyRepository.save(company);
+    public Company addCompany(Company company) {
+        return companyRepository.save(company);
     }
-    
+
     /**
      * Update a company in database
      * 
      * @param company object
      * @throws ApplicationException 
      */
-    public Company updateCompany(Company company) throws ApplicationException  {
-    	Integer companyId = company.getCompanyId();
-    	
-		if (null == companyRepository.findOne(companyId)) {
-    		throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
-    	}
-		
-    	return companyRepository.save(company);
+    public Company updateCompany(Company company) throws ApplicationException {
+        Integer companyId = company.getCompanyId();
 
-	}
+        if (null == companyRepository.findOne(companyId)) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId=" + companyId);
+        }
 
-	/**
-	 * Delete specific company from database
-	 * 
-	 * @param companyId
-	 */
-	public int deleteCompany(int companyId) throws ApplicationException {
-		try {
-			companyRepository.delete(companyId);
-		} catch (EmptyResultDataAccessException ex ) {
-			throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
-		}
-		return companyId;
-	} 
+        return companyRepository.save(company);
 
-	public void importFile(MultipartFile fileToImport) throws ApplicationException {
-		StopWatch stopWatchFileRead = new StopWatch();
-		stopWatchFileRead.start();
-		String fileName = fileToImport.getOriginalFilename();
+    }
 
-		// Validate if file has valid extension
-		if (!FileImportUtil.hasValidExtension(fileName, VALID_FILE_EXTENSION_IMPORT)) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_FILE_EXTENTION, fileName,
-					VALID_FILE_EXTENSION_IMPORT);
-		}
+    /**
+     * Delete specific company from database
+     * 
+     * @param companyId
+     */
+    public int deleteCompany(int companyId) throws ApplicationException {
+        try {
+            companyRepository.delete(companyId);
+        } catch (EmptyResultDataAccessException ex) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId=" + companyId);
+        }
+        return companyId;
+    }
 
-		if (fileToImport.isEmpty()) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
-		}
+    public FileImportResult importFile(MultipartFile fileToImport) throws ApplicationException {
+        StopWatch stopWatchFileRead = new StopWatch();
+        stopWatchFileRead.start();
 
-		// Read all lines from file
-		List<String> fileContents = null;
-		try {
-			fileContents = FileImportUtil.readFileContent(fileToImport);
-		} catch (IOException ex) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
-		}
+        List<String> fileContents = new ArrayList<String>();
+        String[] headers = null;
+        validateFile(fileToImport, fileContents, headers);
+        stopWatchFileRead.stop();
+        StopWatch stopWatchDBSave = new StopWatch();
+        stopWatchDBSave.start();
 
-		// Validate for missing headers
-		String[] headers = fileContents.get(0).split(",");
-		String[] missingHeadersIfAny = FileImportUtil.getMissingHeaders(headers, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-		if (missingHeadersIfAny.length != 0) {
-			String requiredHeaders = String.join(",", REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-			String missingHeaders = String.join(",", missingHeadersIfAny);
-			throw ApplicationException.createFileImportError(APIErrorCodes.MISSING_REQUIRED_HEADERS, fileName,
-					missingHeaders, requiredHeaders);
-		}
+        FileImportResult fileImportResult = new FileImportResult();
+        saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult);
+        stopWatchDBSave.stop();
 
-		// If we are here then file is a valid csv file with all the required headers. 
-		// Now  validate if it has records and number of records not exceed max allowed records
-		int numOfRecords = fileContents.size() - 1; // as first line is for header
-		if (numOfRecords == 0) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
-		}
-		if (numOfRecords > MAX_RECORDS_COMPANY_CSV_IMPORT) {
-			throw ApplicationException.createFileImportError(APIErrorCodes.MAX_RECORD_EXCEEDED,
-					String.valueOf(MAX_RECORDS_COMPANY_CSV_IMPORT));
-		}
-		stopWatchFileRead.stop();
-		StopWatch stopWatchDBSave = new StopWatch();
-		stopWatchDBSave.start();
+        double totalFileReadTimeInSec = stopWatchFileRead.getTotalTimeSeconds();
+        double totalDBSaveTimeInSec = stopWatchDBSave.getTotalTimeSeconds();
+        System.out.println("File Read Time:" + totalFileReadTimeInSec);
+        System.out.println("DB Save Time :" + totalDBSaveTimeInSec);
+        System.out.println(fileImportResult.getNumSuccessRecords());
+        System.out.println(fileImportResult.getNumFailedRecords());
+        return fileImportResult;
+    }
 
-		FileImportResult fileImportResult = new FileImportResult();
-		//saveByEntity(headers, fileContents.subList(1, fileContents.size()), fileImportResult);
-		saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult);
-		//saveByNativeQueryBatchUpdate(fileContents, fileImportResult);
-		stopWatchDBSave.stop();
+    /**
+     * This fulction validates fileToimport and populates fileContens and file headers
+     * @param fileToImport
+     * @param fileContents
+     * @param headers
+     * @throws ApplicationException
+     */
+    private void validateFile(MultipartFile fileToImport, List<String> fileContents, String[] headers) throws ApplicationException {
+        String fileName = fileToImport.getOriginalFilename();
 
-		double totalFileReadTimeInSec = stopWatchFileRead.getTotalTimeSeconds();
-		double totalDBSaveTimeInSec = stopWatchDBSave.getTotalTimeSeconds();
-		System.out.println("File Read Time:" + totalFileReadTimeInSec);
-		System.out.println("DB Save Time :" + totalDBSaveTimeInSec);
-		System.out.println(fileImportResult.getNumSuccessRecords());
-		System.out.println(fileImportResult.getNumFailedRecords());
-		System.out.println(fileImportResult);
-	}
+        // Validate if file has valid extension
+        if (!FileImportUtil.hasValidExtension(fileName, VALID_FILE_EXTENSION_IMPORT)) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_FILE_EXTENTION, fileName, VALID_FILE_EXTENSION_IMPORT);
+        }
 
-	private void saveByNativeQuery(String[] headers, List<String> records, FileImportResult fileImportResult) {
-		fileImportResult.setTotalRecords(records.size());
-		for (int i = 0; i < records.size(); i++) {
-			String record = records.get(i).trim();
-			if (StringUtils.isBlank(record)) {
-				fileImportResult.increamentFailedRecords();
-				fileImportResult.addFailedRecord(i + 1, record, "Blank Record", "Skipped");
-				continue;
-			}
-			try {
-				fileDataRepository.saveCompanyRecord(record);
-				fileImportResult.increamentSuccessRecords();
-			} catch (ArrayIndexOutOfBoundsException ex) {
-				fileImportResult.increamentFailedRecords();
-				fileImportResult.addFailedRecord(i + 1, record, "Not All Fields available in record", "Skipped");
-			} catch (Exception ex) {
-				fileImportResult.increamentFailedRecords();
-				fileImportResult.addFailedRecord(i + 1, record, ex.getMessage(), "Record could not be added");
-			}
-		}
-	}
+        if (fileToImport.isEmpty()) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
+        }
 
-	private void saveByNativeQueryBatchUpdate(List<String> records, FileImportResult fileImportResult) {
-		fileDataRepository.save(records);
-	}
+        // Read all lines from file
+        try {
+            fileContents = FileImportUtil.readFileContent(fileToImport);
+        } catch (IOException ex) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
+        }
 
-	private void saveByEntity(String[] headers, List<String> records, FileImportResult fileImportResult) {
-		Map<String, Company> fileRecordToObjMap = new LinkedHashMap<String, Company>(records.size());
-		List<Company> companies = new ArrayList<Company>();
-		for (String record : records) {
-			try {
-				Company company = getCompanyFromFileRecord(headers, record);
-				fileRecordToObjMap.put(record, company);
-				companies.add(company);
-			} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException ex) { // Ideally these exceptions should not occur
-				fileRecordToObjMap.put(record, null);
-			}
-		}
+        // Validate for missing headers
+        headers = fileContents.get(0).split(",");
+        String[] missingHeadersIfAny = FileImportUtil.getMissingHeaders(headers, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
+        if (missingHeadersIfAny.length != 0) {
+            String requiredHeaders = String.join(",", REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
+            String missingHeaders = String.join(",", missingHeadersIfAny);
+            throw ApplicationException.createFileImportError(APIErrorCodes.MISSING_REQUIRED_HEADERS, fileName, missingHeaders,
+                    requiredHeaders);
+        }
 
-		List<String> duplicateSkippedRecords = new ArrayList<String>(); // List to maintain duplicate records on the basis of companyName
-		int numOfSuccessRecords = 0;
-		int numOfFailedRecords = 0;
-		//TODO : Uncomment this code
-		/*for(String record : fileRecordToObjMap.keySet()) {
-			Set<String> companyNames = new HashSet<String>() ;
-			Company company = fileRecordToObjMap.get(record);
-			if (companyNames.contains(company.getCompanyName())) {
-				// skip the record for save and add it to duplicateReocords list
-				duplicateSkippedRecords.add(record);
-				numOfFailedRecords++;
-			} else {
-				try { 
-					this.addCompany(company);
-					companyNames.add(company.getCompanyName());
-					numOfSuccessRecords++;
-				} catch (Exception ex ) {
-					//TODO : KEEP track of insertion failure for this record with reason
-					//ex.printStackTrace();
-					numOfFailedRecords++;
-				}
-				
-			}
-		}*/
+        // If we are here then file is a valid csv file with all the required headers. 
+        // Now  validate if it has records and number of records not exceed max allowed records
+        int numOfRecords = fileContents.size() - 1; // as first line is for header
+        if (numOfRecords == 0) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
+        }
+        if (numOfRecords > MAX_RECORDS_COMPANY_CSV_IMPORT) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.MAX_RECORD_EXCEEDED,
+                    String.valueOf(MAX_RECORDS_COMPANY_CSV_IMPORT));
+        }
+    }
 
-		//TODO : Remove this code. This is just to get performance stats
-		for (Company company : companies) {
-			try {
-				this.addCompany(company);
-				numOfSuccessRecords++;
-			} catch (Exception ex) {
-				//TODO : KEEP track of insertion failure for this record with reason
-				//ex.printStackTrace();
-				numOfFailedRecords++;
-			}
-		}
-	}
+    private void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult)
+            throws ApplicationException {
+        fileImportResult.setTotalRecords(records.size());
 
-	private Company getCompanyFromFileRecord(String[] headers, String recordInCSV)
-			throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-		// Key is field of the class and value is list of headers mapped to a field.As multiple header may be mapped to a single field
-		Map<String, List<String>> fieldsToHeaderMap = FileImportUtil.getFieldsToHeaderMapForCompanyCSV();
+        Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(187624);
+        Map<String, String> columnToHeaderLocationMap = FileImportUtil.getColumnsToHeaderMapForLocationRecord();
 
-		Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
-		for (int i = 0; i < headers.length; i++) {
-			headerIndexMap.put(headers[i], i);
-		}
+        Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
+        for (int i = 0; i < headersInCSV.length; i++) {
+            headerIndexMap.put(headersInCSV[i], i);
+        }
 
-		String[] splitRecord = recordInCSV.split(",");
-		Company company = new Company();
-		for (String fieldName : fieldsToHeaderMap.keySet()) {
-			List<String> mappedHeaders = fieldsToHeaderMap.get(fieldName);
-			Class<Company> aClass = Company.class;
-			Field field = aClass.getDeclaredField(fieldName);
-			StringBuffer fieldValue = new StringBuffer();
+        String[] companyColumnsToInsert = columnToHeaderCompanyMap.keySet().toArray(new String[columnToHeaderCompanyMap.size()]);
+        String[] locationColumnsToInsert = columnToHeaderLocationMap.keySet().toArray(new String[columnToHeaderLocationMap.size()]);
 
-			// For each header that is mapped to a field in class get its value from the csv record and concat it by space
-			for (String headerInCsv : mappedHeaders) {
-				int index = headerIndexMap.get(headerInCsv);
-				try {
-					fieldValue.append(splitRecord[index].trim());
-				} catch (ArrayIndexOutOfBoundsException ex) {// this can occur if record in csv does not have value corresponding to a column
-					break;
-				}
-				fieldValue.append(SPACE);// concat multiple headers values mapped to a single field by a space
-			}
-			field.setAccessible(true);
-			field.set(company, fieldValue.toString().trim());
-		}
+        for (int recIdx = 0; recIdx < records.size(); recIdx++) {
+            String record = records.get(recIdx).trim();
+            if (StringUtils.isBlank(record)) {
+                fileImportResult.increamentFailedRecords();
+                fileImportResult.addFailedRecord(recIdx + 1, record, "Blank Record", "Skipped");
+                continue;
+            }
 
-		//Set dummy values for not null fields not available in csv for now
-		// TODO : to get update from business on what to do for these fields
-		company.setCompanyType("unknown");
-		company.setSearchHelp("unknown");
-		company.setSpecialNote("unknown");
-		company.setCompanySince(new Date());
-		return company;
-	}
+            String[] values = record.split(",");
+            Object[] companyColumnsValues = new Object[companyColumnsToInsert.length];
+            Object[] locationColumnsValues = new Object[locationColumnsToInsert.length];
 
-	/**
-	 * Return default sort field for company service
-	 * 
-	 * @return String
-	 */
-	@Override
-	public String getDefaultSortField() {
-		return DEFAULT_SORT_BY_COMPANY_NAME;
-	}
+            try {
+                // Populate companyColumnsValues from split record
+                FileImportUtil.populateColumnValues(companyColumnsValues, companyColumnsToInsert, columnToHeaderCompanyMap, values,
+                        headerIndexMap);
+
+                // Populate locationColumnsValues from split record
+                FileImportUtil.populateColumnValues(locationColumnsValues, locationColumnsToInsert, columnToHeaderCompanyMap, values,
+                        headerIndexMap);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                fileImportResult.increamentFailedRecords();
+                fileImportResult.addFailedRecord(recIdx + 1, record, "Not All Fields available in record", "Skipped");
+                continue;
+            } catch (Exception ex) {
+                throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
+            }
+
+            try {
+                fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
+                        locationColumnsValues);
+                fileImportResult.increamentSuccessRecords();
+            } catch (Exception ex) {
+                fileImportResult.increamentFailedRecords();
+                fileImportResult.addFailedRecord(recIdx + 1, record, ex.getMessage(), "Record could not be added");
+            }
+        }
+    }
+
+    /**
+     * This function returns a map of custom fields to customFieldDisplayLabel(Header in CSV)
+     * map by looking up into app_throne_custom_fields table
+     * @return Map<String,String> 
+     */
+    private Map<String, String> getCustomFieldsMap(int id) {
+        Map<String, String> customFieldsMap = fileDataRepository.getCustomFields(id);
+        Map<String, String> customFieldsToHeaderMap = new LinkedHashMap<String, String>();
+
+        for (String customFieldDisplayLabel : customFieldsMap.keySet()) {
+            String customFieldName = "custom" + customFieldsMap.get(customFieldDisplayLabel);
+            customFieldsToHeaderMap.put(customFieldName, customFieldDisplayLabel);
+        }
+        return customFieldsToHeaderMap;
+    }
+
+    private Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
+        Map<String, String> columnToHeaderCompanyMap = FileImportUtil.getColumnsToHeaderMapForCompanyRecord();
+        Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(187624);//customColumnsLookUpId
+
+        //Merge customColumnToHeaderMap to columnToHeaderCompanyMap
+        for (String column : customColumnToHeaderMap.keySet()) {
+            columnToHeaderCompanyMap.put(column, customColumnToHeaderMap.get(column));
+        }
+        return columnToHeaderCompanyMap;
+    }
+
+    /**
+     * Return default sort field for company service
+     * 
+     * @return String
+     */
+    @Override
+    public String getDefaultSortField() {
+        return DEFAULT_SORT_BY_COMPANY_NAME;
+    }
 }
