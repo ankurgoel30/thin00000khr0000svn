@@ -256,7 +256,7 @@ public class CompanyService extends CommonService {
                         headerIndexMap);
 
                 // Populate locationColumnsValues from split record
-                FileImportUtil.populateColumnValues(locationColumnsValues, locationColumnsToInsert, columnToHeaderCompanyMap, values,
+                FileImportUtil.populateColumnValues(locationColumnsValues, locationColumnsToInsert, columnToHeaderLocationMap, values,
                         headerIndexMap);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 fileImportResult.increamentFailedRecords();
