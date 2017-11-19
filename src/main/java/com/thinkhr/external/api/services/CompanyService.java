@@ -15,9 +15,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -149,19 +151,19 @@ public class CompanyService extends CommonService {
         return companyId;
     }
 
-    public FileImportResult importFile(MultipartFile fileToImport) throws ApplicationException {
+    public FileImportResult importFile(MultipartFile fileToImport, int brokerId) throws ApplicationException {
         StopWatch stopWatchFileRead = new StopWatch();
         stopWatchFileRead.start();
 
         List<String> fileContents = new ArrayList<String>();
-        String[] headers = null;
-        validateFile(fileToImport, fileContents, headers);
+        validateFile(fileToImport, fileContents);
         stopWatchFileRead.stop();
         StopWatch stopWatchDBSave = new StopWatch();
         stopWatchDBSave.start();
 
         FileImportResult fileImportResult = new FileImportResult();
-        saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult);
+        String[] headers = fileContents.get(0).split(",");
+        saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult, brokerId);
         stopWatchDBSave.stop();
 
         double totalFileReadTimeInSec = stopWatchFileRead.getTotalTimeSeconds();
@@ -180,7 +182,7 @@ public class CompanyService extends CommonService {
      * @param headers
      * @throws ApplicationException
      */
-    private void validateFile(MultipartFile fileToImport, List<String> fileContents, String[] headers) throws ApplicationException {
+    private void validateFile(MultipartFile fileToImport, List<String> fileContents) throws ApplicationException {
         String fileName = fileToImport.getOriginalFilename();
 
         // Validate if file has valid extension
@@ -194,13 +196,13 @@ public class CompanyService extends CommonService {
 
         // Read all lines from file
         try {
-            fileContents = FileImportUtil.readFileContent(fileToImport);
+            fileContents.addAll(FileImportUtil.readFileContent(fileToImport));
         } catch (IOException ex) {
             throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
         }
 
         // Validate for missing headers
-        headers = fileContents.get(0).split(",");
+        String[] headers = fileContents.get(0).split(",");
         String[] missingHeadersIfAny = FileImportUtil.getMissingHeaders(headers, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
         if (missingHeadersIfAny.length != 0) {
             String requiredHeaders = String.join(",", REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
@@ -221,11 +223,11 @@ public class CompanyService extends CommonService {
         }
     }
 
-    private void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult)
+    private void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult, int brokerId)
             throws ApplicationException {
         fileImportResult.setTotalRecords(records.size());
 
-        Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(187624);
+        Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(brokerId);
         Map<String, String> columnToHeaderLocationMap = FileImportUtil.getColumnsToHeaderMapForLocationRecord();
 
         Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
@@ -265,8 +267,15 @@ public class CompanyService extends CommonService {
             }
 
             try {
+                String companyName = values[0].trim();// Assuming first field in csv is company name
+                if (companyNames.contains(companyName)) {
+                    fileImportResult.increamentFailedRecords();
+                    fileImportResult.addFailedRecord(recIdx + 1, record, "Duplicate Company Name -" + values[0], "Skipped");
+                    continue;
+                }
                 fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
                         locationColumnsValues);
+                companyNames.add(companyName);
                 fileImportResult.increamentSuccessRecords();
             } catch (Exception ex) {
                 fileImportResult.increamentFailedRecords();
