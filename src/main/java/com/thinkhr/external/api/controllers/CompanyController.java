@@ -1,5 +1,6 @@
 package com.thinkhr.external.api.controllers;
 
+import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_BROKERID_FOR_FILE_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
 
 import java.util.List;
@@ -128,7 +129,9 @@ public class CompanyController {
      * @param Multipart file
      */
     @RequestMapping(method=RequestMethod.POST,  value="/import")
-    public FileImportResult importFile(@RequestParam("file") MultipartFile file) throws ApplicationException {
-        return companyService.importFile(file);
+    public FileImportResult importFile(@RequestParam("file") MultipartFile file,
+            @RequestParam(value = "brokerId", required = false, defaultValue = DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId)
+            throws ApplicationException {
+        return companyService.importFile(file, brokerId);
     }
 }
