@@ -11,7 +11,7 @@ import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageab
 import static com.thinkhr.external.api.request.APIRequestHelper.setRequestAttribute;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.sql.DataTruncation;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,7 +30,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.thinkhr.external.api.db.entities.Company;
@@ -152,26 +151,14 @@ public class CompanyService extends CommonService {
     }
 
     public FileImportResult importFile(MultipartFile fileToImport, int brokerId) throws ApplicationException {
-        StopWatch stopWatchFileRead = new StopWatch();
-        stopWatchFileRead.start();
 
         List<String> fileContents = new ArrayList<String>();
         validateFile(fileToImport, fileContents);
-        stopWatchFileRead.stop();
-        StopWatch stopWatchDBSave = new StopWatch();
-        stopWatchDBSave.start();
 
         FileImportResult fileImportResult = new FileImportResult();
         String[] headers = fileContents.get(0).split(",");
         saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult, brokerId);
-        stopWatchDBSave.stop();
 
-        double totalFileReadTimeInSec = stopWatchFileRead.getTotalTimeSeconds();
-        double totalDBSaveTimeInSec = stopWatchDBSave.getTotalTimeSeconds();
-        System.out.println("File Read Time:" + totalFileReadTimeInSec);
-        System.out.println("DB Save Time :" + totalDBSaveTimeInSec);
-        System.out.println(fileImportResult.getNumSuccessRecords());
-        System.out.println(fileImportResult.getNumFailedRecords());
         return fileImportResult;
     }
 
@@ -238,6 +225,10 @@ public class CompanyService extends CommonService {
         String[] companyColumnsToInsert = columnToHeaderCompanyMap.keySet().toArray(new String[columnToHeaderCompanyMap.size()]);
         String[] locationColumnsToInsert = columnToHeaderLocationMap.keySet().toArray(new String[columnToHeaderLocationMap.size()]);
 
+        Set<String> companyNames = new HashSet<String>();// To keep track of duplicate names in record
+        logger.debug("########### ########### COMPANY IMPORT BEGINS ##############");
+        logger.debug("Date: " + new Date().toString());
+        logger.debug("Time: " + new Date().toLocaleString());
         for (int recIdx = 0; recIdx < records.size(); recIdx++) {
             String record = records.get(recIdx).trim();
             if (StringUtils.isBlank(record)) {
@@ -268,20 +259,39 @@ public class CompanyService extends CommonService {
 
             try {
                 String companyName = values[0].trim();// Assuming first field in csv is company name
-               /* if (companyNames.contains(companyName)) {
+                if (companyNames.contains(companyName)) {
                     fileImportResult.increamentFailedRecords();
-                    fileImportResult.addFailedRecord(recIdx + 1, record, "Duplicate Company Name -" + values[0], "Skipped");
+                    fileImportResult.addFailedRecord(recIdx + 1, record, "Duplicate Company Name -" + companyName, "Skipped");
                     continue;
                 }
                 fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
                         locationColumnsValues);
-                companyNames.add(companyName);*/ //TODO: FIXME
+                companyNames.add(companyName);
                 fileImportResult.increamentSuccessRecords();
             } catch (Exception ex) {
                 fileImportResult.increamentFailedRecords();
-                fileImportResult.addFailedRecord(recIdx + 1, record, ex.getMessage(), "Record could not be added");
+                Throwable th = ex.getCause();
+                String message = null;
+                if (th instanceof DataTruncation) {
+                    DataTruncation dte = (DataTruncation) th;
+                    message = "One or more values in record have size larger than expected";
+                } else {
+                    message = ex.getMessage();
+                }
+                fileImportResult.addFailedRecord(recIdx + 1, record, message, "Record could not be added");
             }
         }
+        logger.info("Time: " + new Date().toLocaleString());
+        logger.debug("Total Number of Records: " + fileImportResult.getTotalRecords());
+        logger.debug("Total Number of Successful Records: " + fileImportResult.getNumSuccessRecords());
+        logger.debug("Total Number of Failure Records: " + fileImportResult.getNumFailedRecords());
+        if (fileImportResult.getNumFailedRecords() > 0) {
+            logger.debug("List of Failure Records");
+            for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
+                System.out.println(failedRecord.getRecord() + "," + failedRecord.getFailureCause());
+            }
+        }
+        logger.debug("************** COMPANY IMPORT ENDS *****************");
     }
 
     /**
@@ -302,7 +312,7 @@ public class CompanyService extends CommonService {
 
     private Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
         Map<String, String> columnToHeaderCompanyMap = FileImportUtil.getColumnsToHeaderMapForCompanyRecord();
-        Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(187624);//customColumnsLookUpId
+        Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(customColumnsLookUpId);//customColumnsLookUpId
 
         //Merge customColumnToHeaderMap to columnToHeaderCompanyMap
         for (String column : customColumnToHeaderMap.keySet()) {
