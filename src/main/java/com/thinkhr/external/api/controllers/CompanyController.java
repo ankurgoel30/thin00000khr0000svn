@@ -3,6 +3,9 @@ package com.thinkhr.external.api.controllers;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_BROKERID_FOR_FILE_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +13,10 @@ import javax.validation.Valid;
 
 import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
+import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.services.CompanyService;
-
+import com.thinkhr.external.api.services.utils.FileImportUtil;
 
 /**
  * Company Controller for performing operations
@@ -45,6 +52,8 @@ public class CompanyController {
     @Autowired
     CompanyService companyService;
 
+    @Autowired
+    MessageResourceHandler resourceHandler;
     /**
      * List all companies from repository
      * 
@@ -121,17 +130,29 @@ public class CompanyController {
    	public ResponseEntity<Company> addCompany(@Valid @RequestBody Company company) throws ApplicationException {
     	companyService.addCompany(company);
         return new ResponseEntity<Company>(company, HttpStatus.CREATED);
-   	}
-    
+    }
+
     /**
      * Upload a file and import data from the file into table for company entity
      * 
      * @param Multipart file
+     * @throws IOException 
      */
-    @RequestMapping(method=RequestMethod.POST,  value="/import")
-    public FileImportResult importFile(@RequestParam("file") MultipartFile file,
+    @RequestMapping(method = RequestMethod.POST, value = "/import", produces = "text/csv")
+    public ResponseEntity<InputStreamResource> importFile(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "brokerId", required = false, defaultValue = DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId)
-            throws ApplicationException {
-        return companyService.importFile(file, brokerId);
+            throws ApplicationException, IOException {
+
+        FileImportResult fileImportResult = companyService.importFile(file, brokerId);
+
+        // Set the attachment header.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-disposition", "attachment;filename=fileImportResult.csv");
+
+        File responseFile = FileImportUtil.createReponseFile(fileImportResult, resourceHandler);
+
+        return ResponseEntity.ok().headers(headers).contentLength(responseFile.length()).contentType(MediaType.parseMediaType("text/csv"))
+                .body(new InputStreamResource(new FileInputStream(responseFile)));
     }
+
 }

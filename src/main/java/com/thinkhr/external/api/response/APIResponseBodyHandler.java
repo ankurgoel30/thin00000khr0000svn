@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -103,7 +104,10 @@ public class APIResponseBodyHandler implements ResponseBodyAdvice<Object> {
 			if (body instanceof Integer && statusCode == HttpStatus.ACCEPTED.value()) {
 				apiResponse.setMessage(getMessageFromResourceBundle(resourceHandler, SUCCESS_DELETED, "Company", body.toString()));
 			}
-		}
+            if (body instanceof InputStreamResource) {
+                return body;
+            }
+        }
 		if (logger.isDebugEnabled()) {
 			logger.debug("Request processed and response is " + apiResponse);
 		}
