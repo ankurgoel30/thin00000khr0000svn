@@ -138,7 +138,7 @@ public class CompanyController {
      * @param Multipart file
      * @throws IOException 
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/import", produces = "text/csv")
+    @RequestMapping(method = RequestMethod.POST, value = "/import")
     public ResponseEntity<InputStreamResource> importFile(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "brokerId", required = false, defaultValue = DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId)
             throws ApplicationException, IOException {

@@ -127,19 +127,6 @@ public class FileImportUtil {
         //producer
         columnsToHeaderMap.put("producer", "PRODUCER");
 
-        // get this map from app_throne_custom_fields table
-        //custom1
-        columnsToHeaderMap.put("custom1", "BUSINESS_ID");
-
-        //custom2
-        columnsToHeaderMap.put("custom2", "BRANCH_ID");
-
-        //custom3
-        columnsToHeaderMap.put("custom3", "CLIENT_ID");
-
-        //custom4
-        columnsToHeaderMap.put("custom4", "CLIENT_TYPE");
-
         return columnsToHeaderMap;
     }
 
@@ -204,9 +191,9 @@ public class FileImportUtil {
             writer.write(msg);
             if (fileImportResult.getNumFailedRecords() > 0) {
                 writer.write("Failed  Records\n");
-                writer.write(fileImportResult.getHeaderLine() + ",FailureCause\n");
+                writer.write(fileImportResult.getHeaderLine() + ",Record Number,FailureCause\n");
                 for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
-                    writer.write(failedRecord.getRecord() + "," + failedRecord.getFailureCause() + "\n");
+                    writer.write(failedRecord.getRecord() + "," + failedRecord.getIndex() + "," + failedRecord.getFailureCause() + "\n");
                 }
             }
         }

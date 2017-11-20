@@ -151,9 +151,8 @@ public class CompanyService extends CommonService {
     }
 
     public FileImportResult importFile(MultipartFile fileToImport, int brokerId) throws ApplicationException {
-
         List<String> fileContents = new ArrayList<String>();
-        validateFile(fileToImport, fileContents);
+        validateAndReadFile(fileToImport, fileContents);
 
         FileImportResult fileImportResult = new FileImportResult();
         String[] headers = fileContents.get(0).split(",");
@@ -164,13 +163,13 @@ public class CompanyService extends CommonService {
     }
 
     /**
-     * This function validates fileToimport and populates fileContens and file headers
+     * This function validates fileToimport and populates fileContens
      * @param fileToImport
      * @param fileContents
      * @param headers
      * @throws ApplicationException
      */
-    private void validateFile(MultipartFile fileToImport, List<String> fileContents) throws ApplicationException {
+    private void validateAndReadFile(MultipartFile fileToImport, List<String> fileContents) throws ApplicationException {
         String fileName = fileToImport.getOriginalFilename();
 
         // Validate if file has valid extension
