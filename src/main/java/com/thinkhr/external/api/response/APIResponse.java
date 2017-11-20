@@ -36,5 +36,6 @@ public class APIResponse {
     private List<Company> companies;
     private Company company;
     private String nodeName;
+    private String jobId;
     private FileImportResult fileImportResult;
 }

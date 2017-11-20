@@ -32,6 +32,7 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIError;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.MessageResourceHandler;
+import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.services.utils.EntitySearchUtil;
 
 /**
@@ -87,6 +88,10 @@ public class APIResponseBodyHandler implements ResponseBodyAdvice<Object> {
 		 */
 		if (body instanceof List) {
 			setListData((List)body, httpRequest, apiResponse);
+        } else if (body instanceof FileImportResult) {
+            apiResponse.setFileImportResult((FileImportResult) body);
+            String jobId = (String) httpRequest.getServletRequest().getAttribute("jobId");
+            apiResponse.setJobId(jobId);
 		} else {
 			/*
 			 * TODO: FIXME for generic object
