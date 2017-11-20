@@ -32,7 +32,6 @@ import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIError;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.MessageResourceHandler;
-import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.services.utils.EntitySearchUtil;
 
 /**
@@ -44,100 +43,101 @@ import com.thinkhr.external.api.services.utils.EntitySearchUtil;
  * @since 2017-11-13
  *
  */
-@ControllerAdvice
+@ControllerAdvice ("com.thinkhr.external.api.controllers")
 public class APIResponseBodyHandler implements ResponseBodyAdvice<Object> {
+    
+	private static Logger logger = LoggerFactory.getLogger(APIResponseBodyHandler.class);
+	
+	@Autowired
+	MessageResourceHandler resourceHandler;
+	
+	@Override
+	public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+		return true;
+	}
 
-    private static Logger logger = LoggerFactory.getLogger(APIResponseBodyHandler.class);
+	/**
+	 * This method to identify response body and inject additional information to response. 
+	 * 
+	 *  @param body
+	 *  @param returnType
+	 *  @param selectedContenctType
+	 *  @param selectedConverterType
+	 *  @param request
+	 *  @param response
+	 */
+	@Override
+	public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
+			Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request,
+					ServerHttpResponse response) {
+		
+		if (body instanceof APIError || body instanceof Exception ) {
+			return body;
+		}
+		ServletServerHttpRequest httpRequest = (ServletServerHttpRequest) request;
+		ServletServerHttpResponse httpResponse = (ServletServerHttpResponse) response;
+		
+		APIResponse apiResponse = new APIResponse();
+		int statusCode = httpResponse.getServletResponse().getStatus();
+		apiResponse.setCode(String.valueOf(statusCode));
+		apiResponse.setStatus(HttpStatus.valueOf(statusCode).name());
+		/*
+		 * TODO: Currently there are references those are Company specific, we need to make them generic so 
+		 * the same code reference will be used by all APIs for different entities as well.
+		 */
+		if (body instanceof List) {
+			setListData((List)body, httpRequest, apiResponse);
+		} else {
+			/*
+			 * TODO: FIXME for generic object
+			 */
+			if (body != null && body instanceof Company) {
+				apiResponse.setCompany((Company)body);
+			} 
+			
+			if (body instanceof Integer && statusCode == HttpStatus.ACCEPTED.value()) {
+				apiResponse.setMessage(getMessageFromResourceBundle(resourceHandler, SUCCESS_DELETED, "Company", body.toString()));
+			}
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("Request processed and response is " + apiResponse);
+		}
+		return apiResponse;
+	}
 
-    @Autowired
-    MessageResourceHandler resourceHandler;
-
-    @Override
-    public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return true;
-    }
-
-    /**
-     * This method to identify response body and inject additional information to response. 
-     * 
-     *  @param body
-     *  @param returnType
-     *  @param selectedContenctType
-     *  @param selectedConverterType
-     *  @param request
-     *  @param response
-     */
-    @Override
-    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
-            Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-
-        if (body instanceof APIError || body instanceof Exception) {
-            return body;
-        }
-        ServletServerHttpRequest httpRequest = (ServletServerHttpRequest) request;
-        ServletServerHttpResponse httpResponse = (ServletServerHttpResponse) response;
-
-        APIResponse apiResponse = new APIResponse();
-        int statusCode = httpResponse.getServletResponse().getStatus();
-        apiResponse.setCode(String.valueOf(statusCode));
-        apiResponse.setStatus(HttpStatus.valueOf(statusCode).name());
-        /*
-         * TODO: Currently there are references those are Company specific, we need to make them generic so 
-         * the same code reference will be used by all APIs for different entities as well.
-         */
-
-        if (body instanceof List) {
-            setListData((List) body, httpRequest, apiResponse);
-        } else if (body instanceof FileImportResult) {
-            apiResponse.setFileImportResult((FileImportResult) body);
-        } else {
-            /*
-             * TODO: FIXME for generic object
-             */
-            if (body != null && body instanceof Company) {
-                apiResponse.setCompany((Company) body);
-            }
-
-            if (body instanceof Integer && statusCode == HttpStatus.ACCEPTED.value()) {
-                apiResponse.setMessage(getMessageFromResourceBundle(resourceHandler, SUCCESS_DELETED, "Company", body.toString()));
-            }
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Request processed and response is " + apiResponse);
-        }
-        return apiResponse;
-    }
-
-    /**
-     * To set list specific information into ApiResponse object 
-     * 
-     * @param list
-     * @param httpRequest
-     * @param apiResponse
-     */
-    private void setListData(List list, ServletServerHttpRequest httpRequest, APIResponse apiResponse) {
-
-        String limit = httpRequest.getServletRequest().getParameter(LIMIT_PARAM);
-        limit = StringUtils.isNotBlank(limit) ? limit : String.valueOf(DEFAULT_LIMIT);
-        apiResponse.setLimit(limit);
-
-        String offset = httpRequest.getServletRequest().getParameter(OFFSET_PARAM);
-        offset = StringUtils.isNotBlank(offset) ? offset : String.valueOf(DEFAULT_OFFSET);
-        apiResponse.setOffset(offset);
-
-        String sort = httpRequest.getServletRequest().getParameter(SORT_PARAM);
-        sort = StringUtils.isNotBlank(sort) ? sort.trim() : DEFAULT_SORT_BY_COMPANY_NAME;
-        apiResponse.setSort(EntitySearchUtil.getFormattedString(sort));
-
-        apiResponse.setTotalRecords(getRequestAttribute(TOTAL_RECORDS));
-
-        /*
-         * TODO: FIXME for generic list
-         */
-        apiResponse.setCompanies(list);
-        if (list == null || list.isEmpty()) {
-            apiResponse.setMessage(getMessageFromResourceBundle(resourceHandler, APIErrorCodes.NO_RECORDS_FOUND, "company"));
-        }
-    }
+	/**
+	 * To set list specific information into ApiResponse object 
+	 * 
+	 * @param list
+	 * @param httpRequest
+	 * @param apiResponse
+	 */
+	private void setListData(List list, ServletServerHttpRequest httpRequest, APIResponse apiResponse) {
+		
+		String limit = httpRequest.getServletRequest().getParameter(LIMIT_PARAM);
+		limit = StringUtils.isNotBlank(limit) ? limit : String.valueOf(DEFAULT_LIMIT);
+		apiResponse.setLimit(limit);
+		
+		String offset = httpRequest.getServletRequest().getParameter(OFFSET_PARAM);
+		offset = StringUtils.isNotBlank(offset) ? offset : String.valueOf(DEFAULT_OFFSET);
+		apiResponse.setOffset(offset);
+		
+		String sort = httpRequest.getServletRequest().getParameter(SORT_PARAM);
+		sort = StringUtils.isNotBlank(sort) ? sort : DEFAULT_SORT_BY_COMPANY_NAME;
+		apiResponse.setSort(EntitySearchUtil.getFormattedString(sort));
+		
+		Object totalRecObj = getRequestAttribute(TOTAL_RECORDS);
+		if (totalRecObj != null) {
+			apiResponse.setTotalRecords(String.valueOf(totalRecObj));
+		}
+		
+		/*
+		 * TODO: FIXME for generic list
+		 */
+		apiResponse.setCompanies(list);
+		if (list == null || list.isEmpty()) {
+			apiResponse.setMessage(getMessageFromResourceBundle(resourceHandler, APIErrorCodes.NO_RECORDS_FOUND, "company"));
+		}
+	}
 
 }

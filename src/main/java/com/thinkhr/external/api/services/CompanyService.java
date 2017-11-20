@@ -268,14 +268,14 @@ public class CompanyService extends CommonService {
 
             try {
                 String companyName = values[0].trim();// Assuming first field in csv is company name
-                if (companyNames.contains(companyName)) {
+               /* if (companyNames.contains(companyName)) {
                     fileImportResult.increamentFailedRecords();
                     fileImportResult.addFailedRecord(recIdx + 1, record, "Duplicate Company Name -" + values[0], "Skipped");
                     continue;
                 }
                 fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
                         locationColumnsValues);
-                companyNames.add(companyName);
+                companyNames.add(companyName);*/ //TODO: FIXME
                 fileImportResult.increamentSuccessRecords();
             } catch (Exception ex) {
                 fileImportResult.increamentFailedRecords();
