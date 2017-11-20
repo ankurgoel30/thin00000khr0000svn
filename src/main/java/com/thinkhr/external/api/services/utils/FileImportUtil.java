@@ -1,6 +1,10 @@
 package com.thinkhr.external.api.services.utils;
 
+import static com.thinkhr.external.api.ApplicationConstants.FILE_IMPORT_RESULT_MSG;
+
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +18,10 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.thinkhr.external.api.exception.MessageResourceHandler;
+import com.thinkhr.external.api.model.FileImportResult;
+import com.thinkhr.external.api.response.APIMessageUtil;
 
 public class FileImportUtil {
     /**
@@ -32,6 +40,12 @@ public class FileImportUtil {
         return requiredHeadersSet.toArray(missingHeaders);
     }
 
+    /**
+     * This function checks if given file name has extention as per given valid extentions
+     * @param fileName Name of the file to verify
+     * @param validExtention valid extensions
+     * @return
+     */
     public static boolean hasValidExtension(String fileName, String... validExtention) {
         return FilenameUtils.isExtension(fileName, validExtention);
     }
@@ -170,6 +184,34 @@ public class FileImportUtil {
                 columnValues[k++] = columnValueInCsv;
             }
         }
+    }
+
+    /**
+     * This Function will create a response csv file from FileImportResult
+     * @param FileimportResult fileImportResult
+     * @return File
+     * @throws IOException
+     */
+    public static File createReponseFile(FileImportResult fileImportResult, MessageResourceHandler resourceHandler) throws IOException {
+        File responseFile = File.createTempFile("fileImportResponse", ".csv");
+        FileWriter writer = new FileWriter(responseFile);
+
+        if (fileImportResult != null) {
+            String msg = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, FILE_IMPORT_RESULT_MSG,
+                    String.valueOf(fileImportResult.getTotalRecords()), String.valueOf(fileImportResult.getNumSuccessRecords()),
+                    String.valueOf(fileImportResult.getNumFailedRecords()));
+
+            writer.write(msg);
+            if (fileImportResult.getNumFailedRecords() > 0) {
+                writer.write("Failed  Records\n");
+                writer.write(fileImportResult.getHeaderLine() + ",FailureCause\n");
+                for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
+                    writer.write(failedRecord.getRecord() + "," + failedRecord.getFailureCause() + "\n");
+                }
+            }
+        }
+        writer.close();
+        return responseFile;
     }
 
 }

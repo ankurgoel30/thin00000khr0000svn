@@ -159,11 +159,12 @@ public class CompanyService extends CommonService {
         String[] headers = fileContents.get(0).split(",");
         saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult, brokerId);
 
+        fileImportResult.setHeaderLine(fileContents.get(0));
         return fileImportResult;
     }
 
     /**
-     * This fulction validates fileToimport and populates fileContens and file headers
+     * This function validates fileToimport and populates fileContens and file headers
      * @param fileToImport
      * @param fileContents
      * @param headers
@@ -288,7 +289,7 @@ public class CompanyService extends CommonService {
         if (fileImportResult.getNumFailedRecords() > 0) {
             logger.debug("List of Failure Records");
             for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
-                System.out.println(failedRecord.getRecord() + "," + failedRecord.getFailureCause());
+                logger.debug(failedRecord.getRecord() + "," + failedRecord.getFailureCause());
             }
         }
         logger.debug("************** COMPANY IMPORT ENDS *****************");
