@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
+import com.thinkhr.external.api.request.APIRequestHelper;
 import com.thinkhr.external.api.response.APIMessageUtil;
 
 public class FileImportUtil {
@@ -188,10 +189,15 @@ public class FileImportUtil {
                     String.valueOf(fileImportResult.getTotalRecords()), String.valueOf(fileImportResult.getNumSuccessRecords()),
                     String.valueOf(fileImportResult.getNumFailedRecords()));
 
+            String jobId = (String) APIRequestHelper.getRequestAttribute("jobId");
+            writer.write("Job Id :" + jobId + "\n");
             writer.write(msg);
             if (fileImportResult.getNumFailedRecords() > 0) {
-                writer.write("Failed  Records\n");
-                writer.write(fileImportResult.getHeaderLine() + ",Record Number,FailureCause\n");
+                String title = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILED_RECORDS");
+                String columnForRecordNumber = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "RECORD_NUMBER");
+                writer.write(title + "\n");
+                String columnForFailureCause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
+                writer.write(fileImportResult.getHeaderLine() + "," + columnForRecordNumber + "," + columnForFailureCause + "\n");
                 for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
                     writer.write(failedRecord.getRecord() + "," + failedRecord.getIndex() + "," + failedRecord.getFailureCause() + "\n");
                 }

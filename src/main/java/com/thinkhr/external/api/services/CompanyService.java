@@ -232,6 +232,8 @@ public class CompanyService extends CommonService {
 
         Set<String> companyNames = new HashSet<String>();// To keep track of duplicate names in record
         logger.debug("########### ########### COMPANY IMPORT BEGINS ##############");
+        String jobId = (String) APIRequestHelper.getRequestAttribute("jobId");
+        logger.debug("Job Id :" + jobId);
         logger.debug("Date: " + new Date().toString());
         logger.debug("Time: " + new Date().toLocaleString());
         for (int recIdx = 0; recIdx < records.size(); recIdx++) {
