@@ -160,16 +160,31 @@ public class FileImportUtil {
     /**
      * This method populates the given array columnValues from 
      * columns,columnToHeaderMap,splitValues,headerIndexMap
+     * 
+     * columns is array of columns in database
+     * columnToHeaderMap is a map containing key as column name and value as its mapping column name in csv
+     * splitValues is array of values created by splitting comma seperated csv record
+     * headerIndexMap is a map containing column name in csv as key and value is the index at which this column is found in imported csv. Starting index is 1
+     * 
+     * Currently this function assumes size for columnValues array and columns array is same. 
+     * Difference in sizes will have unpredictable results.
+     * 
      */
     public static void populateColumnValues(Object[] columnValues, String[] columns, Map<String, String> columnToHeaderMap,
             String[] splitValues, Map<String, Integer> headerIndexMap) {
         int k = 0;
         for (String column : columns) {
-            String headerinCsv = columnToHeaderMap.get(column);
-            if (headerinCsv != null) {
-                Integer indexTolookInSplitRecord = headerIndexMap.get(headerinCsv);
-                String columnValueInCsv = splitValues[indexTolookInSplitRecord];
-                columnValues[k++] = columnValueInCsv;
+            String headerinCsv = columnToHeaderMap.get(column); // get the expected csv header corresponding to column
+            if (headerinCsv != null) { // Csv header i.e mapped to column found
+                if (headerIndexMap.containsKey(headerinCsv)) { // CSV contains the mapped header
+                    Integer indexTolookInSplitRecord = headerIndexMap.get(headerinCsv); //get index at which value corresponding to this column is found in csv
+                    String columnValueInCsv = splitValues[indexTolookInSplitRecord]; // lookup split value . This line throwing ArrayIndexOutOfBound exception means split record does nt have the value for this column
+                    columnValues[k++] = columnValueInCsv;
+                } else { //// CSV does not contains the mapped header
+                    columnValues[k++] = null; // keep null as value for this column as its value not found in csv
+                }
+            } else { // No mapping header found
+                columnValues[k++] = null; // keep null as value for this column as its value not found in csv
             }
         }
     }
@@ -194,17 +209,31 @@ public class FileImportUtil {
             writer.write(msg);
             if (fileImportResult.getNumFailedRecords() > 0) {
                 String title = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILED_RECORDS");
-                String columnForRecordNumber = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "RECORD_NUMBER");
                 writer.write(title + "\n");
                 String columnForFailureCause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
-                writer.write(fileImportResult.getHeaderLine() + "," + columnForRecordNumber + "," + columnForFailureCause + "\n");
+                writer.write(fileImportResult.getHeaderLine() + "," + columnForFailureCause + "\n");
                 for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
-                    writer.write(failedRecord.getRecord() + "," + failedRecord.getIndex() + "," + failedRecord.getFailureCause() + "\n");
+                    writer.write(failedRecord.getRecord() + "," + failedRecord.getFailureCause() + "\n");
                 }
             }
         }
         writer.close();
         return responseFile;
+    }
+
+    /**
+     * This  function returns list of custom headers in csv.
+     * Custom Headers =  allHeadersInCSV - requiredHeaders.
+     * @param allHeadersInCSV Array of all headers found in csv.
+     * @param requiredHeaders Array of required headers.
+     * @return List<String>
+     */
+    public static Set<String> getCustomFieldHeaders(String[] allHeadersInCSV, String[] requiredHeaders) {
+        Set<String> allHeadersInCSVSet = new HashSet<String>(Arrays.asList(allHeadersInCSV));
+        Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(requiredHeaders));
+        allHeadersInCSVSet.removeAll(requiredHeadersSet);// after this operation allHeadersInCSVSet will have only custom headers
+
+        return allHeadersInCSVSet;
     }
 
 }

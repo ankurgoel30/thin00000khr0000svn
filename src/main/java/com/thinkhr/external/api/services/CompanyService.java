@@ -12,6 +12,7 @@ import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageab
 import java.io.IOException;
 import java.sql.DataTruncation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,6 +157,10 @@ public class CompanyService extends CommonService {
     }
 
     public FileImportResult importFile(MultipartFile fileToImport, int brokerId) throws ApplicationException {
+        if (!isValidBrokerId(brokerId)) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_BROKER_ID, String.valueOf(brokerId));
+        }
+
         List<String> fileContents = new ArrayList<String>();
         validateAndReadFile(fileToImport, fileContents);
 
@@ -215,12 +220,43 @@ public class CompanyService extends CommonService {
         }
     }
 
+    /**
+     * This function returns true if any Company exists with given broker id
+     * @param brokerId
+     * @return
+     */
+    private boolean isValidBrokerId(int brokerId) {
+        Map<String, String> filterParameters = new HashMap<String, String>(1);
+        filterParameters.put("broker", String.valueOf(brokerId));
+        long count = getTotalRecords(null, filterParameters);
+        return count > 0 ? true : false;
+    }
+
+    /**
+     * Check if all customHeaders in csv has a database field  to which its value should be mapped.
+     * If any custom header does not have mapping field then throw exception.
+     * 
+     */
+    private void checkCustomHeaders(String[] allHeadersInCsv, Collection<String> allMappedHeaders) {
+        String failedCauseColumn = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
+
+        Set<String> customHeaders = FileImportUtil.getCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
+
+        customHeaders.remove(failedCauseColumn);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
+        customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
+        if (!customHeaders.isEmpty()) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.UNMAPPED_CUSTOM_HEADERS, StringUtils.join(customHeaders, ","));
+        }
+    }
+
     private void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult, int brokerId)
             throws ApplicationException {
         fileImportResult.setTotalRecords(records.size());
 
         Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(brokerId);
         Map<String, String> columnToHeaderLocationMap = FileImportUtil.getColumnsToHeaderMapForLocationRecord();
+
+        checkCustomHeaders(headersInCSV, columnToHeaderCompanyMap.values());
 
         Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
         for (int i = 0; i < headersInCSV.length; i++) {
@@ -265,7 +301,7 @@ public class CompanyService extends CommonService {
                 fileImportResult.addFailedRecord(recIdx + 1, record, causeMissingFields, infoSkipped);
                 continue;
             } catch (Exception ex) {
-                throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
+                throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.toString());
             }
 
             try {
@@ -325,6 +361,11 @@ public class CompanyService extends CommonService {
         return customFieldsToHeaderMap;
     }
 
+    /**
+     * 
+     * @param customColumnsLookUpId
+     * @return
+     */
     private Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
         Map<String, String> columnToHeaderCompanyMap = FileImportUtil.getColumnsToHeaderMapForCompanyRecord();
         Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(customColumnsLookUpId);//customColumnsLookUpId
@@ -344,5 +385,18 @@ public class CompanyService extends CommonService {
     @Override
     public String getDefaultSortField() {
         return DEFAULT_SORT_BY_COMPANY_NAME;
+    }
+
+    /**
+     * This function gets total number of company records in db with given searchSpec and filterParameters
+     * 
+     * @param searchSpecs search string to search the records with the matching value in some predefined columns
+     * @param filterParameters A Map having key as field in Company Entity and value use to filter records for this field 
+     * @return 
+     * @throws ApplicationException
+     */
+    private long getTotalRecords(String searchSpec, Map<String, String> filterParameters) throws ApplicationException {
+        Specification<Company> spec = getEntitySearchSpecification(searchSpec, filterParameters, Company.class, new Company());
+        return companyRepository.count(spec);
     }
 }
