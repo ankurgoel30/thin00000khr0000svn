@@ -35,9 +35,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
+import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.repositories.CompanyRepository;
 import com.thinkhr.external.api.repositories.FileDataRepository;
+import com.thinkhr.external.api.response.APIMessageUtil;
 import com.thinkhr.external.api.services.utils.FileImportUtil;
 
 /**
@@ -59,6 +61,9 @@ public class CompanyService extends CommonService {
     private CompanyRepository companyRepository;
     @Autowired
     private FileDataRepository fileDataRepository;
+
+    @Autowired
+    MessageResourceHandler resourceHandler;
 
     /**
      * To fetch companies records. Based on given parameters companies records will be filtered out.
@@ -233,7 +238,9 @@ public class CompanyService extends CommonService {
             String record = records.get(recIdx).trim();
             if (StringUtils.isBlank(record)) {
                 fileImportResult.increamentFailedRecords();
-                fileImportResult.addFailedRecord(recIdx + 1, record, "Blank Record", "Skipped");
+                String causeBlankRecord = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "BLANK_RECORD");
+                String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
+                fileImportResult.addFailedRecord(recIdx + 1, record, causeBlankRecord, infoSkipped);
                 continue;
             }
 
@@ -251,7 +258,9 @@ public class CompanyService extends CommonService {
                         headerIndexMap);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 fileImportResult.increamentFailedRecords();
-                fileImportResult.addFailedRecord(recIdx + 1, record, "Not All Fields available in record", "Skipped");
+                String causeMissingFields = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "MISSING_FIELDS");
+                String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
+                fileImportResult.addFailedRecord(recIdx + 1, record, causeMissingFields, infoSkipped);
                 continue;
             } catch (Exception ex) {
                 throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
@@ -261,7 +270,10 @@ public class CompanyService extends CommonService {
                 String companyName = values[0].trim();// Assuming first field in csv is company name
                 if (companyNames.contains(companyName)) {
                     fileImportResult.increamentFailedRecords();
-                    fileImportResult.addFailedRecord(recIdx + 1, record, "Duplicate Company Name -" + companyName, "Skipped");
+                    String causeDuplicateName = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "DUPLICATE_NAME");
+                    causeDuplicateName = causeDuplicateName + " - " + companyName;
+                    String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
+                    fileImportResult.addFailedRecord(recIdx + 1, record, causeDuplicateName, infoSkipped);
                     continue;
                 }
                 fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
@@ -271,14 +283,15 @@ public class CompanyService extends CommonService {
             } catch (Exception ex) {
                 fileImportResult.increamentFailedRecords();
                 Throwable th = ex.getCause();
-                String message = null;
+                String cause = null;
+                String info = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "RECORD_NOT_ADDED");
                 if (th instanceof DataTruncation) {
                     DataTruncation dte = (DataTruncation) th;
-                    message = "One or more values in record have size larger than expected";
+                    cause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "DATA_TRUNCTATION");
                 } else {
-                    message = ex.getMessage();
+                    cause = ex.getMessage();
                 }
-                fileImportResult.addFailedRecord(recIdx + 1, record, message, "Record could not be added");
+                fileImportResult.addFailedRecord(recIdx + 1, record, cause, info);
             }
         }
         logger.info("Time: " + new Date().toLocaleString());
