@@ -8,10 +8,10 @@ import java.sql.DataTruncation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -227,9 +227,12 @@ public class FileImportService {
             return null;
         }
         
-        return (Map<String, String>)list.stream().collect(
-                Collectors.toMap(x -> "custom" + x.getCustomFieldColumnName(), x -> x.getCustomFieldDisplayLabel()));
-
+        Map<String, String> customFieldsToHeaderMap = new LinkedHashMap<String, String>();
+        for (CustomFields customField : list) {
+            String customFieldName = "custom" + customField.getCustomFieldColumnName();
+            customFieldsToHeaderMap.put(customFieldName, customField.getCustomFieldDisplayLabel());
+        }
+        return customFieldsToHeaderMap;
     }
     
     /**
@@ -246,7 +249,7 @@ public class FileImportService {
         
         companyColumnHeaderMap.putAll(customColumnHeaderMap);
         
-        return customColumnHeaderMap;
+        return companyColumnHeaderMap;
     }
     
 }

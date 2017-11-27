@@ -158,15 +158,38 @@ public class FileImportUtil {
     public static void validateAndFilterCustomHeaders(String[] allHeadersInCsv, 
     									  Collection<String> allMappedHeaders) {
         
-        Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(REQUIRED_HEADERS_COMPANY_CSV_IMPORT));
+        Set<String> customHeaders = FileImportUtil.getCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
+        customHeaders.remove(FAILED_COLUMN_TO_IMPORT);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
         
-        // Filter failedCausedColumn and already mapped columns from custom header list.  
-        String[] customHeaders = (String[]) Arrays.stream(allHeadersInCsv).filter(x -> !requiredHeadersSet.contains(x) && 
-                                                                                       !allMappedHeaders.contains(x) && 
-                                                                                       !FAILED_COLUMN_TO_IMPORT.equalsIgnoreCase(x)).toArray();
-        if (customHeaders == null || customHeaders.length <= 0) {
+        customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
+        if (!customHeaders.isEmpty()) {
             throw ApplicationException.createFileImportError(APIErrorCodes.UNMAPPED_CUSTOM_HEADERS, StringUtils.join(customHeaders, COMMA_SEPARATOR));
         }
+    }
+
+    /**
+     * This  function returns list of custom headers in csv.
+     * Custom Headers =  allHeadersInCSV - requiredHeaders.
+     * @param allHeadersInCSV Array of all headers found in csv.
+     * @param requiredHeaders Array of required headers.
+     * @return List<String>
+     */
+    public static Set<String> getCustomFieldHeaders(String[] allHeadersInCSV, String[] requiredHeaders) {
+
+        if (allHeadersInCSV == null && requiredHeaders == null) {
+            return new HashSet<String>();
+        }
+        if (allHeadersInCSV == null) {
+            return new HashSet<String>();
+        }
+        if (requiredHeaders == null) {
+            return new HashSet<String>(Arrays.asList(allHeadersInCSV));
+        }
+        Set<String> allHeadersInCSVSet = new HashSet<String>(Arrays.asList(allHeadersInCSV));
+        Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(requiredHeaders));
+        allHeadersInCSVSet.removeAll(requiredHeadersSet);// after this operation allHeadersInCSVSet will have only custom headers
+
+        return allHeadersInCSVSet;
     }
 
 
