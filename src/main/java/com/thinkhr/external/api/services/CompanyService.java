@@ -12,7 +12,6 @@ import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageab
 import java.io.IOException;
 import java.sql.DataTruncation;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -225,38 +224,21 @@ public class CompanyService extends CommonService {
      * @param brokerId
      * @return
      */
-    private boolean isValidBrokerId(int brokerId) {
+    protected boolean isValidBrokerId(int brokerId) {
         Map<String, String> filterParameters = new HashMap<String, String>(1);
-        filterParameters.put("broker", String.valueOf(brokerId));
+        filterParameters.put("companyId", String.valueOf(brokerId));
         long count = getTotalRecords(null, filterParameters);
         return count > 0 ? true : false;
     }
 
-    /**
-     * Check if all customHeaders in csv has a database field  to which its value should be mapped.
-     * If any custom header does not have mapping field then throw exception.
-     * 
-     */
-    private void checkCustomHeaders(String[] allHeadersInCsv, Collection<String> allMappedHeaders) {
-        String failedCauseColumn = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
-
-        Set<String> customHeaders = FileImportUtil.getCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-
-        customHeaders.remove(failedCauseColumn);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
-        customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
-        if (!customHeaders.isEmpty()) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.UNMAPPED_CUSTOM_HEADERS, StringUtils.join(customHeaders, ","));
-        }
-    }
-
-    private void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult, int brokerId)
+    protected void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult, int brokerId)
             throws ApplicationException {
         fileImportResult.setTotalRecords(records.size());
 
         Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(brokerId);
         Map<String, String> columnToHeaderLocationMap = FileImportUtil.getColumnsToHeaderMapForLocationRecord();
 
-        checkCustomHeaders(headersInCSV, columnToHeaderCompanyMap.values());
+        FileImportUtil.checkCustomHeaders(headersInCSV, columnToHeaderCompanyMap.values(), resourceHandler);
 
         Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
         for (int i = 0; i < headersInCSV.length; i++) {
@@ -350,7 +332,7 @@ public class CompanyService extends CommonService {
      * map by looking up into app_throne_custom_fields table
      * @return Map<String,String> 
      */
-    private Map<String, String> getCustomFieldsMap(int id) {
+    protected Map<String, String> getCustomFieldsMap(int id) {
         Map<String, String> customFieldsMap = fileDataRepository.getCustomFields(id);
         Map<String, String> customFieldsToHeaderMap = new LinkedHashMap<String, String>();
 
@@ -366,7 +348,7 @@ public class CompanyService extends CommonService {
      * @param customColumnsLookUpId
      * @return
      */
-    private Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
+    protected Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
         Map<String, String> columnToHeaderCompanyMap = FileImportUtil.getColumnsToHeaderMapForCompanyRecord();
         Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(customColumnsLookUpId);//customColumnsLookUpId
 
@@ -395,7 +377,7 @@ public class CompanyService extends CommonService {
      * @return 
      * @throws ApplicationException
      */
-    private long getTotalRecords(String searchSpec, Map<String, String> filterParameters) throws ApplicationException {
+    protected long getTotalRecords(String searchSpec, Map<String, String> filterParameters) throws ApplicationException {
         Specification<Company> spec = getEntitySearchSpecification(searchSpec, filterParameters, Company.class, new Company());
         return companyRepository.count(spec);
     }
