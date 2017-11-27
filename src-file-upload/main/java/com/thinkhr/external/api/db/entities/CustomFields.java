@@ -21,7 +21,6 @@ import lombok.Data;
 @Entity
 @Table(name = "app_throne_custom_fields")
 @Data
-@Where(clause="t1_is_active=1")
 public class CustomFields {
     
     @Id
