@@ -117,6 +117,9 @@ public class FileImportService {
             headerIndexMap.put(headersInCSV[i], i);
         }
 
+        List<String> companyColumnsToInsert = new ArrayList<String>(companyFileHeaderColumnMap.keySet());
+        List<String> locationColumnsToInsert = new ArrayList<String>(locationFileHeaderColumnMap.keySet());
+
         int recCount = 0;
        
         for (String record : records ) {
@@ -131,21 +134,23 @@ public class FileImportService {
             String companyName = rowColValues[0]; 
 
             if (companyNames.contains(companyName)) {
-                addDuplicateRecordToResult(fileImportResult,
-                        recCount, record, companyName);
+                addDuplicateRecordToResult(fileImportResult, recCount, record, companyName);
                 continue;
             } 
             companyNames.add(companyName);
 
-            Object[] companyColumnsValues = null;
-            Object[] locationColumnsValues = null;
+            List<Object> companyColumnsValues = null;
+            List<Object> locationColumnsValues = null;
 
             try {
                 // Populate companyColumnsValues from split record
-                companyColumnsValues = FileImportUtil.populateColumnValues(record, companyFileHeaderColumnMap, headerIndexMap);
+                companyColumnsValues = FileImportUtil.populateColumnValues(record, companyColumnsToInsert, companyFileHeaderColumnMap,
+                        headerIndexMap);
 
                 // Populate locationColumnsValues from split record
-                locationColumnsValues = FileImportUtil.populateColumnValues(record, locationFileHeaderColumnMap, headerIndexMap);
+                locationColumnsValues = FileImportUtil.populateColumnValues(record, locationColumnsToInsert, locationFileHeaderColumnMap,
+                        headerIndexMap);
+
             } catch (ArrayIndexOutOfBoundsException ex) {
                 addFailedRecordToResult(fileImportResult, record, recCount);
                 continue;
@@ -156,7 +161,7 @@ public class FileImportService {
             try {
 
                 //Finally save companies one by one
-                fileDataRepository.saveCompanyRecord(companyFileHeaderColumnMap.keySet(), companyColumnsValues, locationFileHeaderColumnMap.keySet(),
+                fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
                         locationColumnsValues);
 
                 fileImportResult.increamentSuccessRecords();

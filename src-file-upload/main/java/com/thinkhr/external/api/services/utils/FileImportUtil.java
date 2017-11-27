@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -110,6 +111,43 @@ public class FileImportUtil {
         }
         
         return companyColumnsValues;
+    }
+
+    /**
+     * This method populates the given array columnValues from 
+     * columns,columnToHeaderMap,splitValues,headerIndexMap
+     * 
+     * columns is array of columns in database
+     * columnToHeaderMap is a map containing key as column name and value as its mapping column name in csv
+     * splitValues is array of values created by splitting comma seperated csv record
+     * headerIndexMap is a map containing column name in csv as key and value is the index at which this column is found in imported csv. Starting index is 1
+     * 
+     * Currently this function assumes size for columnValues array and columns array is same. 
+     * Difference in sizes will have unpredictable results.
+     * 
+     */
+    public static List<Object> populateColumnValues(String fileRow, List<String> columns, Map<String, String> columnToHeaderMap,
+            Map<String, Integer> headerIndexMap) {
+        List<Object> columnValues = new ArrayList<Object>();
+
+        String[] rowColValues = fileRow.split(COMMA_SEPARATOR);
+
+        int k = 0;
+        for (String column : columns) {
+            String headerinCsv = columnToHeaderMap.get(column); // get the expected csv header corresponding to column
+            if (headerinCsv != null) { // Csv header i.e mapped to column found
+                if (headerIndexMap.containsKey(headerinCsv)) { // CSV contains the mapped header
+                    Integer indexTolookInSplitRecord = headerIndexMap.get(headerinCsv); //get index at which value corresponding to this column is found in csv
+                    String columnValueInCsv = rowColValues[indexTolookInSplitRecord].trim(); // lookup split value . This line throwing ArrayIndexOutOfBound exception means split record does nt have the value for this column
+                    columnValues.add(columnValueInCsv);
+                } else { //// CSV does not contains the mapped header
+                    columnValues.add(null); // keep null as value for this column as its value not found in csv
+                }
+            } else { // No mapping header found
+                columnValues.add(null); // keep null as value for this column as its value not found in csv
+            }
+        }
+        return columnValues;
     }
 
     /**
