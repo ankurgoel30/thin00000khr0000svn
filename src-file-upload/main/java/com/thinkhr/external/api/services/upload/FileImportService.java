@@ -169,12 +169,6 @@ public class FileImportService {
                 continue;
             }
 
-            //Check to validate duplicate record
-            boolean isDuplicate  = checkDuplicate(recCount, record, fileImportResult);
-            if (isDuplicate) {
-                continue;
-            }
-
             String[] rowColValues = record.split(COMMA_SEPARATOR);
             String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
 
@@ -202,6 +196,11 @@ public class FileImportService {
             }
 
             try {
+                //Check to validate duplicate record
+                boolean isDuplicate = checkDuplicate(recCount, record, fileImportResult);
+                if (isDuplicate) {
+                    continue;
+                }
 
                 //Finally save companies one by one
                 fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
