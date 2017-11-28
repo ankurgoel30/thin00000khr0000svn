@@ -6,11 +6,10 @@ import static com.thinkhr.external.api.ApplicationConstants.TOTAL_RECORDS;
 import static com.thinkhr.external.api.request.APIRequestHelper.setRequestAttribute;
 import static com.thinkhr.external.api.response.APIMessageUtil.getMessageFromResourceBundle;
 import static com.thinkhr.external.api.services.upload.FileImportValidator.validateAndGetFileContent;
-import static com.thinkhr.external.api.services.upload.FileImportValidator.validateFileContents;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getEntitySearchSpecification;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageable;
-import static com.thinkhr.external.api.services.utils.FileImportUtil.*;
-
+import static com.thinkhr.external.api.services.utils.FileImportUtil.populateColumnValues;
+import static com.thinkhr.external.api.services.utils.FileImportUtil.validateAndFilterCustomHeaders;
 
 import java.sql.DataTruncation;
 import java.util.ArrayList;
@@ -19,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -34,9 +32,7 @@ import com.thinkhr.external.api.ApplicationConstants;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
-import com.thinkhr.external.api.model.BulkCompanyModel;
 import com.thinkhr.external.api.model.FileImportResult;
-import com.thinkhr.external.api.model.BulkCompanyModel.CompanyJSONModel;
 import com.thinkhr.external.api.services.upload.FileUploadEnum;
 
 /**
@@ -159,26 +155,6 @@ public class CompanyService  extends CommonService {
      * @param brokerId
      * @throws ApplicationException
      */
-    public FileImportResult bulkUpload(BulkCompanyModel companyData, int brokerId) throws ApplicationException {
-
-        Company broker = validateAndGetBroker(brokerId);
-
-        List<String> fileContents = (List<String>) companyData.getCompanies().stream().
-                map(CompanyJSONModel::toCsvRow).collect(Collectors.toList());
-
-        validateFileContents(fileContents, "json");
-
-        return processRecords (fileContents, broker);
-
-    }
-
-    /**
-     * Imports a CSV file for companies record
-     * 
-     * @param fileToImport
-     * @param brokerId
-     * @throws ApplicationException
-     */
     public FileImportResult bulkUpload(MultipartFile fileToImport, int brokerId) throws ApplicationException {
 
         Company broker = validateAndGetBroker(brokerId);
@@ -230,10 +206,6 @@ public class CompanyService  extends CommonService {
 
         for (String record : records ) {
 
-            String[] rowColValues = record.split(COMMA_SEPARATOR);
-            String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
-            companyNames.add(companyName);
-            
             //Check to validate empty record
             if (StringUtils.isBlank(record)) {
                 fileImportResult.addFailedRecord(recCount++ , record, 
@@ -242,6 +214,11 @@ public class CompanyService  extends CommonService {
 
                 continue;
             }
+
+            String[] rowColValues = record.split(COMMA_SEPARATOR);
+            String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
+            companyNames.add(companyName);
+            
 
             //Check to validate duplicate record
             if (checkDuplicate(recCount, record, fileImportResult)) {
@@ -343,10 +320,14 @@ public class CompanyService  extends CommonService {
             FileImportResult fileImportResult) {
 
         String[] rowColValues = record.split(COMMA_SEPARATOR);
-
+        
         String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
 
-        String custom1Value = rowColValues[11].trim();
+        String custom1Value = null; 
+
+        if (rowColValues.length > 11) {
+           custom1Value = rowColValues[11].trim();
+        }
 
         boolean isDuplicate = false;
 
@@ -365,7 +346,7 @@ public class CompanyService  extends CommonService {
             if (isDuplicate) {
                 String causeDuplicateName = getMessageFromResourceBundle(resourceHandler, APIErrorCodes.DUPLICATE_RECORD);
                 causeDuplicateName = (!isSpecial ? causeDuplicateName + " - " + companyName : 
-                                causeDuplicateName + " - " + companyName +", " + custom1Value);
+                                causeDuplicateName + " - " + companyName + ", " + custom1Value);
                 fileImportResult.addFailedRecord(recCount++ , record, causeDuplicateName,
                         getMessageFromResourceBundle(resourceHandler, APIErrorCodes.SKIPPED_RECORD));
             } 
