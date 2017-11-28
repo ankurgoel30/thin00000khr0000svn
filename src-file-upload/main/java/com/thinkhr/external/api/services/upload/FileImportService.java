@@ -147,10 +147,7 @@ public class FileImportService {
         Map<String, String> locationFileHeaderColumnMap = FileUploadEnum.LOCATION.prepareColumnHeaderMap();
 
         //Check every custom field from imported file has a corrosponding column in database. If not, retrun error here.
-        FileImportUtil.validateAndFilterCustomHeaders(headersInCSV, companyFileHeaderColumnMap.values());
-        
-        List<String> companyColumnsToInsert = new ArrayList<String>(companyFileHeaderColumnMap.keySet());
-        List<String> locationColumnsToInsert = new ArrayList<String>(locationFileHeaderColumnMap.keySet());
+        FileImportUtil.validateAndFilterCustomHeaders(headersInCSV, companyFileHeaderColumnMap.values(), resourceHandler);
 
         Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
         for (int i = 0; i < headersInCSV.length; i++) {
@@ -160,9 +157,11 @@ public class FileImportService {
         int recCount = 0;
        
         for (String record : records ) {
+            List<String> companyColumnsToInsert = new ArrayList<String>(companyFileHeaderColumnMap.keySet());
+            List<String> locationColumnsToInsert = new ArrayList<String>(locationFileHeaderColumnMap.keySet());
 
-            //Check to validate empty record
-            if (StringUtils.isBlank(record)) {
+			//Check to validate empty record            
+			if (StringUtils.isBlank(record)) {
                 fileImportResult.addFailedRecord(recCount++ , record, 
                         getMessageFromResourceBundle(resourceHandler, APIErrorCodes.BLANK_RECORD),
                         getMessageFromResourceBundle(resourceHandler, APIErrorCodes.SKIPPED_RECORD));
