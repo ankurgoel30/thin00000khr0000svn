@@ -6,6 +6,11 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.thinkhr.external.api.exception.APIErrorCodes;
+import com.thinkhr.external.api.response.APIMessageUtil;
+
 /**
  * This class is used to collect information when records from csv file
  * 
@@ -15,30 +20,36 @@ import lombok.Data;
  */
 @Data
 public class FileImportResult {
-	private int totalRecords;
-	private int numSuccessRecords;
-	private int numFailedRecords;
-	private String headerLine; // For storing header to be used for creating responseFile
-	private List<FailedRecord> failedRecords = new ArrayList<FailedRecord>();
+    private int totalRecords;
+    private int numSuccessRecords;
+    private int numFailedRecords;
 
-	public void increamentSuccessRecords() {
-		numSuccessRecords++;
-	}
+    @JsonIgnore
+    private String headerLine; // For storing header to be used for creating responseFile
 
-	public void increamentFailedRecords() {
-		numFailedRecords++;
-	}
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<FailedRecord> failedRecords = new ArrayList<FailedRecord>();
 
-	public void addFailedRecord(int index, String record, String failureCause, String info) {
-		this.getFailedRecords().add(new FailedRecord(index, record, failureCause, info));
-	}
+    public void increamentSuccessRecords() {
+        numSuccessRecords++;
+    }
 
-	@Data
-	@AllArgsConstructor
-	public class FailedRecord {
-		int index; //  line number of failed record
-		String record;// Actual record in file
-		String failureCause;
-		String info;//additional information
-	}
+    public void increamentFailedRecords() {
+        numFailedRecords++;
+    }
+
+    public void addFailedRecord(int index, String record, String failureCause, String info) {
+        increamentFailedRecords();
+        this.getFailedRecords().add(new FailedRecord(index, record, failureCause, info));
+    }
+
+    @Data
+    @AllArgsConstructor
+    public class FailedRecord {
+        int index; //  line number of failed record
+        String record;// Actual record in file
+        String failureCause;
+        String info;//additional information
+    }
+
 }
