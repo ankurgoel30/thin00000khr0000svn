@@ -1,7 +1,6 @@
 package com.thinkhr.external.api.services.utils;
 
 import static com.thinkhr.external.api.ApplicationConstants.COMMA_SEPARATOR;
-import static com.thinkhr.external.api.ApplicationConstants.FAILED_COLUMN_TO_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.FILE_IMPORT_RESULT_MSG;
 import static com.thinkhr.external.api.ApplicationConstants.REQUIRED_HEADERS_COMPANY_CSV_IMPORT;
 
@@ -194,10 +193,11 @@ public class FileImportUtil {
      * @param allMappedHeaders
      */
     public static void validateAndFilterCustomHeaders(String[] allHeadersInCsv, 
-    									  Collection<String> allMappedHeaders) {
+            Collection<String> allMappedHeaders, MessageResourceHandler resourceHandler) {
         
         Set<String> customHeaders = FileImportUtil.getCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-        customHeaders.remove(FAILED_COLUMN_TO_IMPORT);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
+        String columnForFailureCause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
+        customHeaders.remove(columnForFailureCause);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
         
         customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
         if (!customHeaders.isEmpty()) {
