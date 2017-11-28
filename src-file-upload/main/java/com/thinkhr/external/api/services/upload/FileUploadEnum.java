@@ -107,9 +107,10 @@ public enum FileUploadEnum {
         Map<String, String> columnToHeaderMap = new HashMap<String, String>();
         for (FileUploadEnum value : FileUploadEnum.values()) {
             if (value.getResource().equalsIgnoreCase(this.getResource())) {
-                if (value.getColumn() != null) {
-                    columnToHeaderMap.put(value.getColumn(), value.getHeader());
+                if (value.getColumn() == null) {
+                    continue; //As it is not a valid entry for map.
                 }
+                columnToHeaderMap.put(value.getColumn(),  value.getHeader());
             }
         }
         return columnToHeaderMap;
