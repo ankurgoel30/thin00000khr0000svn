@@ -121,7 +121,7 @@ public class FileImportUtil {
                     String.valueOf(fileImportResult.getNumFailedRecords()));
 
             String printResponse =  fileImportResult.printReport(jobId, msg, 
-                    APIMessageUtil.getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILED_RECORD),
+                    APIMessageUtil.getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILED_RECORDS),
                     APIMessageUtil.getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILURE_CAUSE));
             writer.write(printResponse);
         }
