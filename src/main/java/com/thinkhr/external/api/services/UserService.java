@@ -1,6 +1,8 @@
 package com.thinkhr.external.api.services;
 
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_USER_NAME;
+import static com.thinkhr.external.api.ApplicationConstants.TOTAL_RECORDS;
+import static com.thinkhr.external.api.request.APIRequestHelper.setRequestAttribute;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getEntitySearchSpecification;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageable;
 
@@ -8,8 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,19 +24,21 @@ import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.repositories.UserRepository;
 
 /**
-* The UserService class provides a collection of all
-* services related with users
-*
-* @author  Surabhi Bhawsar
-* @since   2017-11-01 
-*/
+ * The UserService class provides a collection of all
+ * services related with users
+ *
+ * @author  Surabhi Bhawsar
+ * @since   2017-11-01 
+ */
 
 @Service
 public class UserService extends CommonService {
-	
+
+    private Logger logger = LoggerFactory.getLogger(UserService.class);
+
     @Autowired	
     private UserRepository userRepository;
-    
+
     /**
      * Fetch all users from database based on offset, limit and sortField and search criteria
      * 
@@ -44,19 +49,31 @@ public class UserService extends CommonService {
      * @return List<User> object 
      */
     public List<User> getAllUser(Integer offset, Integer limit, String sortField, 
-    		String searchSpec, Map<String, String> requestParameters) throws ApplicationException  {
-    
-    	List<User> users = new ArrayList<User>();
+            String searchSpec, Map<String, String> requestParameters) throws ApplicationException  {
 
-    	Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
-    	
-    	Specification<User> spec = getEntitySearchSpecification(searchSpec, requestParameters, User.class, new User());
-    	
-    	Page<User> userList  = (Page<User>) userRepository.findAll(spec,pageable);
+        List<User> users = new ArrayList<User>();
 
-    	userList.getContent().forEach(c -> users.add(c));
-    	
-    	return users;
+        Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
+
+        if(logger.isDebugEnabled()) {
+            logger.debug("Request parameters to filter, size and paginate records ");
+            if (requestParameters != null) {
+                requestParameters.entrySet().stream().forEach(entry -> { logger.debug(entry.getKey() + ":: " + entry.getValue()); });
+            }
+        }
+
+        Specification<User> spec = getEntitySearchSpecification(searchSpec, requestParameters, User.class, new User());
+
+        Page<User> userList  = (Page<User>) userRepository.findAll(spec,pageable);
+
+        if (userList != null) {
+            userList.getContent().forEach(c -> users.add(c));
+        }
+
+        //Get and set the total number of records
+        setRequestAttribute(TOTAL_RECORDS, userRepository.count());
+
+        return users;
     }
 
     /**
@@ -65,19 +82,22 @@ public class UserService extends CommonService {
      * @return User object 
      */
     public User getUser(Integer userId) {
-    	User user = null;
-    	user = userRepository.findOne(userId);
-    	return user;
+        User user = userRepository.findOne(userId);
+        if (user == null) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "user", "userId = "+ userId);
+        }
+
+        return user;
     }
-    
+
     /**
      * Add a user in system
      * @param User object
      */
     public User addUser(User user)  {
-    	return userRepository.save(user);
+        return userRepository.save(user);
     }
-    
+
     /**
      * Update a user in database
      * 
@@ -85,31 +105,32 @@ public class UserService extends CommonService {
      * @throws ApplicationException 
      */
     public User updateUser(User user) throws ApplicationException  {
-    	Integer userId = user.getContactId();
-    	
-		if (null == userRepository.findOne(userId)) {
-    		throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "user", "contactId="+userId);
-    	}
-		
-    	return userRepository.save(user);
+        Integer userId = user.getUserId();
+
+        if (null == userRepository.findOne(userId)) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "user", "userId="+userId);
+        }
+        //If not passed in model, then object will become in-active.
+        return userRepository.save(user);
     }
-    
+
     /**
      * Delete specific user from database
      * 
      * @param userId
-     * @throws ApplicationException 
      */
     public int deleteUser(int userId) throws ApplicationException {
-    	try {
-    		userRepository.delete(userId);
-    	} catch (EmptyResultDataAccessException ex ) {
-    		throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "user", "contactId="+userId);
-    	}
-    	return userId;
+
+        if (null == userRepository.findOne(userId)) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "user", "userId="+userId);
+        }
+
+        userRepository.softDelete(userId);
+
+        return userId;
     }    
-    
-    
+
+
     /**
      * Return default sort field for user service
      * 
@@ -117,7 +138,7 @@ public class UserService extends CommonService {
      */
     @Override
     public String getDefaultSortField()  {
-    	return DEFAULT_SORT_BY_USER_NAME;
+        return DEFAULT_SORT_BY_USER_NAME;
     }
 
 }

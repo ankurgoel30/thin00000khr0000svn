@@ -1,24 +1,24 @@
 package com.thinkhr.external.api.services.utils;
 
+import static com.thinkhr.external.api.ApplicationConstants.COMMA_SEPARATOR;
 import static com.thinkhr.external.api.ApplicationConstants.FILE_IMPORT_RESULT_MSG;
 import static com.thinkhr.external.api.ApplicationConstants.REQUIRED_HEADERS_COMPANY_CSV_IMPORT;
+import static com.thinkhr.external.api.response.APIMessageUtil.getMessageFromResourceBundle;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +29,16 @@ import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.request.APIRequestHelper;
 import com.thinkhr.external.api.response.APIMessageUtil;
 
+/**
+ * A utility class for performing all operations
+ * on File Import.
+ *  
+ * @since 2-17-11-17
+ * @author Ajay
+ *
+ */
 public class FileImportUtil {
+	
     /**
      * Finds if any required header is missing from given set of headers
      * 
@@ -38,15 +47,6 @@ public class FileImportUtil {
      * @return String[] Array of missing headers 
      */
     public static String[] getMissingHeaders(String[] presentHeaders, String[] requiredHeaders) {
-        if (presentHeaders == null && requiredHeaders == null) {
-            return new String[0];
-        }
-        if (presentHeaders == null) {
-            return requiredHeaders;
-        }
-        if (requiredHeaders == null) {
-            return new String[0];
-        }
         Set<String> headersInFileSet = new HashSet<String>(Arrays.asList(presentHeaders));
         Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(requiredHeaders));
         requiredHeadersSet.removeAll(headersInFileSet);
@@ -55,113 +55,52 @@ public class FileImportUtil {
         return requiredHeadersSet.toArray(missingHeaders);
     }
 
+  
     /**
-     * This function checks if given file name has extension as per given valid extensions
-     * @param fileName Name of the file to verify
-     * @param validExtention valid extensions
+     * Reads file content for given CSV
+     * 
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public static List<String> readFileContent(MultipartFile file) {
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(file.getInputStream()));
+            return br.lines().collect(Collectors.toList());
+        } catch (IOException ioe) {
+            throw ApplicationException.createBadRequest(APIErrorCodes.FILE_READ_ERROR, file.getName());
+        }
+    }
+  
+    /**
+     * Populate column values
+     * 
+     * @param fileRow
+     * @param columnToHeaderMap
+     * @param headerIndexMap
      * @return
      */
-    public static boolean hasValidExtension(String fileName, String... validExtention) {
-        return FilenameUtils.isExtension(fileName, validExtention);
-    }
+    public static List<Object> populateColumnValues(String fileRow, Map<String, String> columnToHeaderMap,
+            Map<String, Integer> headerIndexMap) {
+        
+        List<String> columns = new ArrayList<String>(columnToHeaderMap.keySet());
 
-    public static List<String> readFileContent(MultipartFile file) throws IOException {
-        BufferedReader br;
-        List<String> result = new ArrayList<>();
-        String line;
-        InputStream is = file.getInputStream();
-        br = new BufferedReader(new InputStreamReader(is));
-        while ((line = br.readLine()) != null) {
-            result.add(line);
-        }
-        return result;
-    }
+        List<Object> columnValues = new ArrayList<Object>();
 
-    /**
-     * This method returns a map for columns in table for Company entity to headers in csv.
-     * Key in map is the name of column in db.
-     * Value in map is name corresponding column in CSV file.
-     */
-    public static Map<String, String> getColumnsToHeaderMapForCompanyRecord() {
-        Map<String, String> columnsToHeaderMap = new LinkedHashMap<String, String>();
+        String[] rowColValues = fileRow.split(COMMA_SEPARATOR);
 
-        //clientName
-        columnsToHeaderMap.put("client_name", "CLIENT_NAME");
-
-        //displayName
-        columnsToHeaderMap.put("display_name", "DISPLAY_NAME");
-
-        //companyPhone
-        columnsToHeaderMap.put("client_phone", "PHONE");
-
-        //industry
-        columnsToHeaderMap.put("industry", "INDUSTRY");
-
-        //companySize
-        columnsToHeaderMap.put("companysize", "COMPANY_SIZE");
-
-        //producer
-        columnsToHeaderMap.put("producer", "PRODUCER");
-
-        return columnsToHeaderMap;
-    }
-
-    /**
-     * This method returns a map for columns in locations table to headers in csv.
-     * Key in map is the name of column in db for locations table.
-     * Value in map is name of corresponding column in CSV file.
-     */
-    public static Map<String, String> getColumnsToHeaderMapForLocationRecord() {
-        Map<String, String> columnsToHeaderMap = new LinkedHashMap<String, String>();
-
-        //address
-        columnsToHeaderMap.put("address", "ADDRESS");
-
-        //address2
-        columnsToHeaderMap.put("address2", "ADDRESS2");
-
-        //city
-        columnsToHeaderMap.put("city", "CITY");
-
-        //state
-        columnsToHeaderMap.put("state", "STATE");
-
-        //zip
-        columnsToHeaderMap.put("zip", "ZIP");
-
-        return columnsToHeaderMap;
-    }
-
-    /**
-     * This method populates the given array columnValues from 
-     * columns,columnToHeaderMap,splitValues,headerIndexMap
-     * 
-     * columns is array of columns in database
-     * columnToHeaderMap is a map containing key as column name and value as its mapping column name in csv
-     * splitValues is array of values created by splitting comma seperated csv record
-     * headerIndexMap is a map containing column name in csv as key and value is the index at which this column is found in imported csv. Starting index is 1
-     * 
-     * Currently this function assumes size for columnValues array and columns array is same. 
-     * Difference in sizes will have unpredictable results.
-     * 
-     */
-    public static void populateColumnValues(Object[] columnValues, String[] columns, Map<String, String> columnToHeaderMap,
-            String[] splitValues, Map<String, Integer> headerIndexMap) {
-        int k = 0;
-        for (String column : columns) {
-            String headerinCsv = columnToHeaderMap.get(column); // get the expected csv header corresponding to column
-            if (headerinCsv != null) { // Csv header i.e mapped to column found
-                if (headerIndexMap.containsKey(headerinCsv)) { // CSV contains the mapped header
-                    Integer indexTolookInSplitRecord = headerIndexMap.get(headerinCsv); //get index at which value corresponding to this column is found in csv
-                    String columnValueInCsv = splitValues[indexTolookInSplitRecord].trim(); // lookup split value . This line throwing ArrayIndexOutOfBound exception means split record does nt have the value for this column
-                    columnValues[k++] = columnValueInCsv;
-                } else { //// CSV does not contains the mapped header
-                    columnValues[k++] = null; // keep null as value for this column as its value not found in csv
-                }
-            } else { // No mapping header found
-                columnValues[k++] = null; // keep null as value for this column as its value not found in csv
-            }
-        }
+        columns.forEach(col -> {
+              String csvHeader = columnToHeaderMap.get(col);
+              if (csvHeader != null && headerIndexMap.containsKey(csvHeader)) {
+                  Integer colIndx = headerIndexMap.get(csvHeader);
+                  columnValues.add(rowColValues[colIndx].trim());
+              } else {
+                  columnValues.add(null);
+              }
+        });
+        
+        return columnValues;
     }
 
     /**
@@ -175,68 +114,74 @@ public class FileImportUtil {
         FileWriter writer = new FileWriter(responseFile);
 
         if (fileImportResult != null) {
+            String jobId = (String) APIRequestHelper.getRequestAttribute("jobId");
+
             String msg = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, FILE_IMPORT_RESULT_MSG,
                     String.valueOf(fileImportResult.getTotalRecords()), String.valueOf(fileImportResult.getNumSuccessRecords()),
                     String.valueOf(fileImportResult.getNumFailedRecords()));
 
-            String jobId = (String) APIRequestHelper.getRequestAttribute("jobId");
-            writer.write("Job Id :" + jobId + "\n");
-            writer.write(msg);
-            if (fileImportResult.getNumFailedRecords() > 0) {
-                String title = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILED_RECORDS");
-                writer.write(title + "\n");
-                String columnForFailureCause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
-                writer.write(fileImportResult.getHeaderLine() + "," + columnForFailureCause + "\n");
-                for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
-                    writer.write(failedRecord.getRecord() + "," + failedRecord.getFailureCause() + "\n");
-                }
-            }
+            String printResponse =  fileImportResult.printReport(jobId, msg, 
+                    APIMessageUtil.getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILED_RECORD),
+                    APIMessageUtil.getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILURE_CAUSE));
+            writer.write(printResponse);
         }
+        
         writer.close();
         return responseFile;
+    }
+
+    
+    /**
+     * Check if all customHeaders in csv has a database field  to which its value should be mapped.
+     * If any custom header does not have mapping field then throw exception.
+     * 
+     * Not able to use batch processing here due to requirement of
+     * dealing with failure records & adding data in more than one tables.
+     * 
+     * @param allHeadersInCsv
+     * @param allMappedHeaders
+     * @param resourceHandler
+     */
+    public static void validateAndFilterCustomHeaders(String[] allHeadersInCsv, 
+    									  Collection<String> allMappedHeaders
+    									  , MessageResourceHandler resourceHandler) {
+        
+        Set<String> customHeaders = filterCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
+        
+        String columnForFailureCause = getMessageFromResourceBundle(resourceHandler, APIErrorCodes.FAILURE_CAUSE);
+        
+        customHeaders.remove(columnForFailureCause);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
+
+        customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
+        if (!customHeaders.isEmpty()) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.UNMAPPED_CUSTOM_HEADERS,
+                    StringUtils.join(customHeaders, COMMA_SEPARATOR));
+        }
     }
 
     /**
      * This  function returns list of custom headers in csv.
      * Custom Headers =  allHeadersInCSV - requiredHeaders.
-     * @param allHeadersInCSV Array of all headers found in csv.
-     * @param requiredHeaders Array of required headers.
+     * @param allHeaders Array of all headers found in csv.
+     * @param nonCustomHeaders Array of required headers.
      * @return List<String>
      */
-    public static Set<String> getCustomFieldHeaders(String[] allHeadersInCSV, String[] requiredHeaders) {
+    public static Set<String> filterCustomFieldHeaders(String[] allHeaders, String[] nonCustomHeaders) {
 
-        if (allHeadersInCSV == null && requiredHeaders == null) {
-            return new HashSet<String>();
+        Set<String> customHeaders = new HashSet<String>();
+        
+        if (allHeaders == null) {
+            return customHeaders;
         }
-        if (allHeadersInCSV == null) {
-            return new HashSet<String>();
+        //First add custom headers to all sets.
+        customHeaders.addAll(Arrays.asList(allHeaders)); //Consider all headers as custom headers
+
+        if (nonCustomHeaders != null) { //i.e all headers includes required headers
+            customHeaders.removeAll(Arrays.asList(nonCustomHeaders));// after this operation allHeadersInCSVSet will have only custom headers
         }
-        if (requiredHeaders == null) {
-            return new HashSet<String>(Arrays.asList(allHeadersInCSV));
-        }
-        Set<String> allHeadersInCSVSet = new HashSet<String>(Arrays.asList(allHeadersInCSV));
-        Set<String> requiredHeadersSet = new HashSet<String>(Arrays.asList(requiredHeaders));
-        allHeadersInCSVSet.removeAll(requiredHeadersSet);// after this operation allHeadersInCSVSet will have only custom headers
-
-        return allHeadersInCSVSet;
-    }
-
-    /**
-     * Check if all customHeaders in csv has a database field  to which its value should be mapped.
-     * If any custom header does not have mapping field then throw exception.
-     * 
-     */
-    public static void checkCustomHeaders(String[] allHeadersInCsv, Collection<String> allMappedHeaders,
-            MessageResourceHandler resourceHandler) throws ApplicationException {
-        String failedCauseColumn = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "FAILURE_CAUSE");
-
-        Set<String> customHeaders = FileImportUtil.getCustomFieldHeaders(allHeadersInCsv, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-
-        customHeaders.remove(failedCauseColumn);// need to remove failedCauseColumn from customHeaders for the case when user tries to import response csv file
-        customHeaders.removeAll(allMappedHeaders);// = customHeaders - allMappedHeaders
-        if (!customHeaders.isEmpty()) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.UNMAPPED_CUSTOM_HEADERS, StringUtils.join(customHeaders, ","));
-        }
+        
+        return customHeaders;
+        
     }
 
 
