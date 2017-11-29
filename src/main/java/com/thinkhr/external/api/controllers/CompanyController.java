@@ -30,7 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.thinkhr.external.api.ApplicationConstants;
 import com.thinkhr.external.api.db.entities.Company;
-import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
 import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
@@ -141,7 +140,7 @@ public class CompanyController {
      * @param brokerId - brokerId from request. Originally retrieved as part of JWT token
      * 
      */
-    @RequestMapping(method=RequestMethod.POST,  value="/bulk", produces="application/csv")
+    @RequestMapping(method=RequestMethod.POST,  value="/bulk")
     public ResponseEntity <InputStreamResource> bulkUploadFile(@RequestParam(value="file", required=false) MultipartFile file, 
     		@RequestParam(value = "brokerId", required = false, 
             			  defaultValue = ApplicationConstants.DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId )
@@ -158,8 +157,9 @@ public class CompanyController {
 
         File responseFile = FileImportUtil.createReponseFile(fileImportResult, resourceHandler);
 
-        return ResponseEntity.ok().headers(headers)
+        return ResponseEntity.ok().headers(headers).contentLength(responseFile.length()).contentType(MediaType.parseMediaType("text/csv"))
                 .body(new InputStreamResource(new FileInputStream(responseFile)));
+
     }
    
 }
