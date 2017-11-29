@@ -1,21 +1,20 @@
 package com.thinkhr.external.api.services;
 
+import static com.thinkhr.external.api.ApplicationConstants.COMMA_SEPARATOR;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
-import static com.thinkhr.external.api.ApplicationConstants.MAX_RECORDS_COMPANY_CSV_IMPORT;
-import static com.thinkhr.external.api.ApplicationConstants.REQUIRED_HEADERS_COMPANY_CSV_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.TOTAL_RECORDS;
-import static com.thinkhr.external.api.ApplicationConstants.VALID_FILE_EXTENSION_IMPORT;
 import static com.thinkhr.external.api.request.APIRequestHelper.setRequestAttribute;
+import static com.thinkhr.external.api.response.APIMessageUtil.getMessageFromResourceBundle;
+import static com.thinkhr.external.api.services.upload.FileImportValidator.validateAndGetFileContent;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getEntitySearchSpecification;
 import static com.thinkhr.external.api.services.utils.EntitySearchUtil.getPageable;
+import static com.thinkhr.external.api.services.utils.FileImportUtil.populateColumnValues;
+import static com.thinkhr.external.api.services.utils.FileImportUtil.validateAndFilterCustomHeaders;
 
-import java.io.IOException;
 import java.sql.DataTruncation;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,49 +22,37 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.thinkhr.external.api.ApplicationConstants;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
-import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
-import com.thinkhr.external.api.repositories.CompanyRepository;
-import com.thinkhr.external.api.repositories.FileDataRepository;
-import com.thinkhr.external.api.request.APIRequestHelper;
-import com.thinkhr.external.api.response.APIMessageUtil;
-import com.thinkhr.external.api.services.utils.FileImportUtil;
+import com.thinkhr.external.api.services.upload.FileUploadEnum;
 
 /**
-*
-* Provides a collection of all services related with Company
-* database object
-*
-* @author Surabhi Bhawsar
-* @Since 2017-11-04
-*
-* 
-*/
+ *
+ * Provides a collection of all services related with Company
+ * database object
+
+ * @author Surabhi Bhawsar
+ * @Since 2017-11-04
+ *
+ * 
+ */
 
 @Service
-public class CompanyService extends CommonService {
+public class CompanyService  extends CommonService {
 
     private Logger logger = LoggerFactory.getLogger(CompanyService.class);
-    @Autowired
-    private CompanyRepository companyRepository;
-    @Autowired
-    private FileDataRepository fileDataRepository;
-
-    @Autowired
-    MessageResourceHandler resourceHandler;
 
     /**
+     *
      * To fetch companies records. Based on given parameters companies records will be filtered out.
      * 
      * @param Integer offset First record index from database after sorting. Default value is 0
@@ -75,35 +62,39 @@ public class CompanyService extends CommonService {
      * @param Map<String, String>
      * @return List<Company> object 
      * @throws ApplicationException 
+     * 
      */
     public List<Company> getAllCompany(Integer offset, 
-    		Integer limit,
-    		String sortField, 
-    		String searchSpec, 
+            Integer limit,
+            String sortField, 
+            String searchSpec, 
             Map<String, String> requestParameters) throws ApplicationException {
 
         List<Company> companies = new ArrayList<Company>();
 
         Pageable pageable = getPageable(offset, limit, sortField, getDefaultSortField());
 
-        if (logger.isDebugEnabled()) {
+        if(logger.isDebugEnabled()) {
             logger.debug("Request parameters to filter, size and paginate records ");
             if (requestParameters != null) {
-				requestParameters.entrySet().stream().forEach(entry -> { logger.debug(entry.getKey() + ":: " + entry.getValue()); });
+                requestParameters.entrySet().stream().forEach(entry -> { logger.debug(entry.getKey() + ":: " + entry.getValue()); });
             }
         }
 
         Specification<Company> spec = getEntitySearchSpecification(searchSpec, requestParameters, Company.class, new Company());
 
-    	Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec, pageable);
+        Page<Company> companyList  = (Page<Company>) companyRepository.findAll(spec, pageable);
 
-        companyList.getContent().forEach(c -> companies.add(c));
+        if (companyList != null) {
+            companyList.getContent().forEach(c -> companies.add(c));
+        }
 
         //Get and set the total number of records
         setRequestAttribute(TOTAL_RECORDS, companyRepository.count());
 
         return companies;
     }
+
 
     /**
      * Fetch specific company from database
@@ -112,7 +103,13 @@ public class CompanyService extends CommonService {
      * @return Company object 
      */
     public Company getCompany(Integer companyId) {
-        return companyRepository.findOne(companyId);
+        Company company =  companyRepository.findOne(companyId);
+        
+        if (null == company) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+ companyId);
+        }
+
+    	return company;
     }
 
     /**
@@ -120,7 +117,7 @@ public class CompanyService extends CommonService {
      * 
      * @param company object
      */
-    public Company addCompany(Company company) {
+    public Company addCompany(Company company)  {
         return companyRepository.save(company);
     }
 
@@ -130,11 +127,11 @@ public class CompanyService extends CommonService {
      * @param company object
      * @throws ApplicationException 
      */
-    public Company updateCompany(Company company) throws ApplicationException {
-        Integer companyId = company.getCompanyId();
-
+    public Company updateCompany(Company company) throws ApplicationException  {
+    	Integer companyId = company.getCompanyId();
+    	
         if (null == companyRepository.findOne(companyId)) {
-            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId=" + companyId);
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
         }
 
         return companyRepository.save(company);
@@ -147,238 +144,249 @@ public class CompanyService extends CommonService {
      * @param companyId
      */
     public int deleteCompany(int companyId) throws ApplicationException {
-        try {
-            companyRepository.delete(companyId);
-        } catch (EmptyResultDataAccessException ex) {
-            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId=" + companyId);
+
+        if (null == companyRepository.findOne(companyId)) {
+            throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+companyId);
         }
+
+        companyRepository.softDelete(companyId);
+
         return companyId;
-    }
-
-    public FileImportResult importFile(MultipartFile fileToImport, int brokerId) throws ApplicationException {
-        if (!isValidBrokerId(brokerId)) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_BROKER_ID, String.valueOf(brokerId));
-        }
-
-        List<String> fileContents = new ArrayList<String>();
-        validateAndReadFile(fileToImport, fileContents);
-
-        FileImportResult fileImportResult = new FileImportResult();
-        String[] headers = fileContents.get(0).split(",");
-        saveByNativeQuery(headers, fileContents.subList(1, fileContents.size()), fileImportResult, brokerId);
-
-        fileImportResult.setHeaderLine(fileContents.get(0));
-        return fileImportResult;
-    }
+    }    
 
     /**
-     * This function validates fileToimport and populates fileContens
+     * Imports a CSV file for companies record
+     * 
      * @param fileToImport
-     * @param fileContents
-     * @param headers
+     * @param brokerId
      * @throws ApplicationException
      */
-    private void validateAndReadFile(MultipartFile fileToImport, List<String> fileContents) throws ApplicationException {
-        String fileName = fileToImport.getOriginalFilename();
+    public FileImportResult bulkUpload(MultipartFile fileToImport, int brokerId) throws ApplicationException {
 
-        // Validate if file has valid extension
-        if (!FileImportUtil.hasValidExtension(fileName, VALID_FILE_EXTENSION_IMPORT)) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_FILE_EXTENTION, fileName, VALID_FILE_EXTENSION_IMPORT);
-        }
+        Company broker = validateAndGetBroker(brokerId);
 
-        if (fileToImport.isEmpty()) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
-        }
+        List<String> fileContents = validateAndGetFileContent(fileToImport);
 
-        // Read all lines from file
-        try {
-            fileContents.addAll(FileImportUtil.readFileContent(fileToImport));
-        } catch (IOException ex) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.getMessage());
-        }
+        return processRecords (fileContents, broker);
 
-        // Validate for missing headers
-        String[] headers = fileContents.get(0).split(",");
-        String[] missingHeadersIfAny = FileImportUtil.getMissingHeaders(headers, REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-        if (missingHeadersIfAny.length != 0) {
-            String requiredHeaders = String.join(",", REQUIRED_HEADERS_COMPANY_CSV_IMPORT);
-            String missingHeaders = String.join(",", missingHeadersIfAny);
-            throw ApplicationException.createFileImportError(APIErrorCodes.MISSING_REQUIRED_HEADERS, fileName, missingHeaders,
-                    requiredHeaders);
-        }
-
-        // If we are here then file is a valid csv file with all the required headers. 
-        // Now  validate if it has records and number of records not exceed max allowed records
-        int numOfRecords = fileContents.size() - 1; // as first line is for header
-        if (numOfRecords == 0) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
-        }
-        if (numOfRecords > MAX_RECORDS_COMPANY_CSV_IMPORT) {
-            throw ApplicationException.createFileImportError(APIErrorCodes.MAX_RECORD_EXCEEDED,
-                    String.valueOf(MAX_RECORDS_COMPANY_CSV_IMPORT));
-        }
     }
 
     /**
-     * This function returns true if any Company exists with given broker id
+     * Process imported file to save companies records in database
+     *  
+     * @param records
      * @param brokerId
-     * @return
+     * @param resource
+     * @throws ApplicationException
      */
-    protected boolean isValidBrokerId(int brokerId) {
-        Map<String, String> filterParameters = new HashMap<String, String>(1);
-        filterParameters.put("companyId", String.valueOf(brokerId));
-        long count = getTotalRecords(null, filterParameters);
-        return count > 0 ? true : false;
-    }
+    private FileImportResult processRecords (List<String> records, 
+                                                 Company broker) throws ApplicationException {
 
-    protected void saveByNativeQuery(String[] headersInCSV, List<String> records, FileImportResult fileImportResult, int brokerId)
-            throws ApplicationException {
+        FileImportResult fileImportResult = new FileImportResult();
+
+        String headerLine = records.get(0);
+        records.remove(0);
+
         fileImportResult.setTotalRecords(records.size());
+        fileImportResult.setHeaderLine(headerLine);
 
-        Map<String, String> columnToHeaderCompanyMap = getCompanyColumnsHeaderMap(brokerId);
-        Map<String, String> columnToHeaderLocationMap = FileImportUtil.getColumnsToHeaderMapForLocationRecord();
+        //To keep track of duplicate records in imported file. A duplicate record = duplicate client_name
+        Set<String> companyNames = new HashSet<String>();
 
-        FileImportUtil.checkCustomHeaders(headersInCSV, columnToHeaderCompanyMap.values(), resourceHandler);
+        String[] headersInCSV = headerLine.split(COMMA_SEPARATOR);
+
+        //DO not assume that CSV file shall contains fixed column position. Let's read and map then with database column
+        Map<String, String> companyFileHeaderColumnMap = getCompanyColumnHeaderMap(broker.getCompanyId()); 
+
+        Map<String, String> locationFileHeaderColumnMap = FileUploadEnum.LOCATION.prepareColumnHeaderMap();
+
+        //Check every custom field from imported file has a corresponding column in database. If not, return error here.
+        validateAndFilterCustomHeaders(headersInCSV, companyFileHeaderColumnMap.values(), resourceHandler);
 
         Map<String, Integer> headerIndexMap = new HashMap<String, Integer>();
         for (int i = 0; i < headersInCSV.length; i++) {
             headerIndexMap.put(headersInCSV[i], i);
         }
 
-        String[] companyColumnsToInsert = columnToHeaderCompanyMap.keySet().toArray(new String[columnToHeaderCompanyMap.size()]);
-        String[] locationColumnsToInsert = columnToHeaderLocationMap.keySet().toArray(new String[columnToHeaderLocationMap.size()]);
+        int recCount = 0;
 
-        Set<String> companyNames = new HashSet<String>();// To keep track of duplicate names in record
-        logger.debug("########### ########### COMPANY IMPORT BEGINS ##############");
-        String jobId = (String) APIRequestHelper.getRequestAttribute("jobId");
-        logger.debug("Job Id :" + jobId);
-        logger.debug("Date: " + new Date().toString());
-        logger.debug("Time: " + new Date().toLocaleString());
-        for (int recIdx = 0; recIdx < records.size(); recIdx++) {
-            String record = records.get(recIdx).trim();
+        for (String record : records ) {
+
+            //Check to validate empty record
             if (StringUtils.isBlank(record)) {
-                fileImportResult.increamentFailedRecords();
-                String causeBlankRecord = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "BLANK_RECORD");
-                String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
-                fileImportResult.addFailedRecord(recIdx + 1, record, causeBlankRecord, infoSkipped);
+                fileImportResult.addFailedRecord(recCount++ , record, 
+                        getMessageFromResourceBundle(resourceHandler, APIErrorCodes.BLANK_RECORD),
+                        getMessageFromResourceBundle(resourceHandler, APIErrorCodes.SKIPPED_RECORD));
+
                 continue;
             }
 
-            String[] values = record.split(",");
-            Object[] companyColumnsValues = new Object[companyColumnsToInsert.length];
-            Object[] locationColumnsValues = new Object[locationColumnsToInsert.length];
+            String[] rowColValues = record.split(COMMA_SEPARATOR);
+            String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
+            companyNames.add(companyName);
+            
 
-            try {
-                // Populate companyColumnsValues from split record
-                FileImportUtil.populateColumnValues(companyColumnsValues, companyColumnsToInsert, columnToHeaderCompanyMap, values,
-                        headerIndexMap);
-
-                // Populate locationColumnsValues from split record
-                FileImportUtil.populateColumnValues(locationColumnsValues, locationColumnsToInsert, columnToHeaderLocationMap, values,
-                        headerIndexMap);
-            } catch (ArrayIndexOutOfBoundsException ex) {
-                fileImportResult.increamentFailedRecords();
-                String causeMissingFields = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "MISSING_FIELDS");
-                String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
-                fileImportResult.addFailedRecord(recIdx + 1, record, causeMissingFields, infoSkipped);
+            //Check to validate duplicate record
+            if (checkDuplicate(recCount, record, fileImportResult)) {
                 continue;
-            } catch (Exception ex) {
-                throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.toString());
             }
 
-            try {
-                String companyName = values[0].trim();// Assuming first field in csv is company name
-                if (companyNames.contains(companyName)) {
-                    fileImportResult.increamentFailedRecords();
-                    String causeDuplicateName = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "DUPLICATE_NAME");
-                    causeDuplicateName = causeDuplicateName + " - " + companyName;
-                    String infoSkipped = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "SKIPPED");
-                    fileImportResult.addFailedRecord(recIdx + 1, record, causeDuplicateName, infoSkipped);
-                    continue;
-                }
-                fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
-                        locationColumnsValues);
-                companyNames.add(companyName);
-                fileImportResult.increamentSuccessRecords();
-            } catch (Exception ex) {
-                fileImportResult.increamentFailedRecords();
-                Throwable th = ex.getCause();
-                String cause = null;
-                String info = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "RECORD_NOT_ADDED");
-                if (th instanceof DataTruncation) {
-                    DataTruncation dte = (DataTruncation) th;
-                    cause = APIMessageUtil.getMessageFromResourceBundle(resourceHandler, "DATA_TRUNCTATION");
-                } else {
-                    cause = ex.getMessage();
-                }
-                fileImportResult.addFailedRecord(recIdx + 1, record, cause, info);
-            }
+            populateAndSaveToDB(record, companyFileHeaderColumnMap,
+                                locationFileHeaderColumnMap,
+                                headerIndexMap,
+                                fileImportResult,
+                                recCount);
         }
-        logger.info("Time: " + new Date().toLocaleString());
+
         logger.debug("Total Number of Records: " + fileImportResult.getTotalRecords());
         logger.debug("Total Number of Successful Records: " + fileImportResult.getNumSuccessRecords());
         logger.debug("Total Number of Failure Records: " + fileImportResult.getNumFailedRecords());
+
         if (fileImportResult.getNumFailedRecords() > 0) {
             logger.debug("List of Failure Records");
             for (FileImportResult.FailedRecord failedRecord : fileImportResult.getFailedRecords()) {
-                logger.debug(failedRecord.getRecord() + "," + failedRecord.getFailureCause());
+                logger.debug(failedRecord.getRecord() + COMMA_SEPARATOR + failedRecord.getFailureCause());
             }
         }
-        logger.debug("************** COMPANY IMPORT ENDS *****************");
+
+        return fileImportResult;
     }
 
+    
     /**
-     * This function returns a map of custom fields to customFieldDisplayLabel(Header in CSV)
-     * map by looking up into app_throne_custom_fields table
-     * @return Map<String,String> 
-     */
-    protected Map<String, String> getCustomFieldsMap(int id) {
-        Map<String, String> customFieldsMap = fileDataRepository.getCustomFields(id);
-        Map<String, String> customFieldsToHeaderMap = new LinkedHashMap<String, String>();
-
-        for (String customFieldDisplayLabel : customFieldsMap.keySet()) {
-            String customFieldName = "custom" + customFieldsMap.get(customFieldDisplayLabel);
-            customFieldsToHeaderMap.put(customFieldName, customFieldDisplayLabel);
-        }
-        return customFieldsToHeaderMap;
-    }
-
-    /**
+     * Populate values to columns and insert record into DB
      * 
-     * @param customColumnsLookUpId
+     * @param record
+     * @param companyFileHeaderColumnMap
+     * @param locationFileHeaderColumnMap
+     * @param headerIndexMap
+     * @param fileImportResult
+     * @param recCount
+     */
+    public void populateAndSaveToDB(String record, 
+                                    Map<String, String> companyFileHeaderColumnMap, 
+                                    Map<String, String> locationFileHeaderColumnMap, 
+                                    Map<String, Integer> headerIndexMap,
+                                    FileImportResult fileImportResult, 
+                                    int recCount) {
+        
+        List<Object> companyColumnsValues = null;
+        List<Object> locationColumnsValues = null;
+
+        try {
+            // Populate companyColumnsValues from split record
+            companyColumnsValues = populateColumnValues(record, 
+                    companyFileHeaderColumnMap,
+                    headerIndexMap);
+
+            // Populate locationColumnsValues from split record
+            locationColumnsValues = populateColumnValues(record, 
+                    locationFileHeaderColumnMap,
+                    headerIndexMap);
+
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            fileImportResult.addFailedRecord(recCount++ , record, 
+                    getMessageFromResourceBundle(resourceHandler, APIErrorCodes.MISSING_FIELDS), 
+                    getMessageFromResourceBundle(resourceHandler, APIErrorCodes.SKIPPED_RECORD));
+            return;
+        } catch (Exception ex) {
+            throw ApplicationException.createFileImportError(APIErrorCodes.FILE_READ_ERROR, ex.toString());
+        }
+
+        try {
+
+            //Finally save companies one by one
+            List<String> companyColumnsToInsert = new ArrayList<String>(companyFileHeaderColumnMap.keySet());
+            List<String> locationColumnsToInsert = new ArrayList<String>(locationFileHeaderColumnMap.keySet());
+
+            fileDataRepository.saveCompanyRecord(companyColumnsToInsert, companyColumnsValues, locationColumnsToInsert,
+                    locationColumnsValues);
+
+            fileImportResult.increamentSuccessRecords();
+        } catch (Exception ex) {
+            String cause = ex.getCause() instanceof DataTruncation ? 
+                    getMessageFromResourceBundle(resourceHandler, APIErrorCodes.DATA_TRUNCTATION) :
+                        ex.getMessage();
+                    fileImportResult.addFailedRecord(recCount++ , record, cause,
+                            getMessageFromResourceBundle(resourceHandler, APIErrorCodes.RECORD_NOT_ADDED));
+        }
+
+    }
+    /**
+     * TODO: Logic to decide record is duplicate
+     * 
+     * @param companyName
+     * @param custom1Value
+     * @param recCount
+     * @param record
+     * @param fileImportResult
      * @return
      */
-    protected Map<String, String> getCompanyColumnsHeaderMap(int customColumnsLookUpId) {
-        Map<String, String> columnToHeaderCompanyMap = FileImportUtil.getColumnsToHeaderMapForCompanyRecord();
-        Map<String, String> customColumnToHeaderMap = getCustomFieldsMap(customColumnsLookUpId);//customColumnsLookUpId
+    public boolean checkDuplicate(int recCount, String record,
+            FileImportResult fileImportResult) {
 
-        //Merge customColumnToHeaderMap to columnToHeaderCompanyMap
-        for (String column : customColumnToHeaderMap.keySet()) {
-            columnToHeaderCompanyMap.put(column, customColumnToHeaderMap.get(column));
+        String[] rowColValues = record.split(COMMA_SEPARATOR);
+        
+        String companyName = rowColValues[0].trim(); //TODO Fix this hardcoding.
+
+        String custom1Value = null; 
+
+        if (rowColValues.length > 11) {
+           custom1Value = rowColValues[11].trim();
         }
-        return columnToHeaderCompanyMap;
+
+        boolean isDuplicate = false;
+
+        boolean isSpecial = StringUtils.equalsIgnoreCase(companyName, ApplicationConstants.SPECIAL_CASE_FOR_DUPLICATE);
+
+        Company companyByFirstName = companyRepository.findFirstByCompanyName(companyName);
+
+        if (null != companyByFirstName) { //A DB query is must here to check duplicates in data
+            if (!isSpecial) {
+                isDuplicate = true;
+            }
+            //handle special case of Paychex
+            if (isSpecial && companyRepository.findFirstByCompanyNameAndCustom1(companyName, custom1Value) != null) {  
+                isDuplicate = true;
+            }
+            if (isDuplicate) {
+                String causeDuplicateName = getMessageFromResourceBundle(resourceHandler, APIErrorCodes.DUPLICATE_RECORD);
+                causeDuplicateName = (!isSpecial ? causeDuplicateName + " - " + companyName : 
+                                causeDuplicateName + " - " + companyName + ", " + custom1Value);
+                fileImportResult.addFailedRecord(recCount++ , record, causeDuplicateName,
+                        getMessageFromResourceBundle(resourceHandler, APIErrorCodes.SKIPPED_RECORD));
+            } 
+        }
+
+        return isDuplicate;
+    }
+    
+    /**
+     * Get a map of Company columns
+     * 
+     * @param companyId
+     * @return
+     */
+    public Map<String, String> getCompanyColumnHeaderMap(int companyId) {
+        
+        Map<String, String> companyColumnHeaderMap = FileUploadEnum.COMPANY.prepareColumnHeaderMap();
+        
+        Map<String, String> customColumnHeaderMap = getCustomFieldsMap(companyId);//customColumnsLookUpId - gets custom fields from database
+        
+        if (customColumnHeaderMap != null) {
+            companyColumnHeaderMap.putAll(customColumnHeaderMap);
+        }
+        return companyColumnHeaderMap;
     }
 
     /**
      * Return default sort field for company service
      * 
-     * @return String
+     * @return String 
      */
     @Override
-    public String getDefaultSortField() {
+    public String getDefaultSortField()  {
         return DEFAULT_SORT_BY_COMPANY_NAME;
     }
 
-    /**
-     * This function gets total number of company records in db with given searchSpec and filterParameters
-     * 
-     * @param searchSpecs search string to search the records with the matching value in some predefined columns
-     * @param filterParameters A Map having key as field in Company Entity and value use to filter records for this field 
-     * @return 
-     * @throws ApplicationException
-     */
-    protected long getTotalRecords(String searchSpec, Map<String, String> filterParameters) throws ApplicationException {
-        Specification<Company> spec = getEntitySearchSpecification(searchSpec, filterParameters, Company.class, new Company());
-        return companyRepository.count(spec);
-    }
 }

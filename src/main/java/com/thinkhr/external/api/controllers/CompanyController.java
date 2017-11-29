@@ -1,6 +1,5 @@
 package com.thinkhr.external.api.controllers;
 
-import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_BROKERID_FOR_FILE_IMPORT;
 import static com.thinkhr.external.api.ApplicationConstants.DEFAULT_SORT_BY_COMPANY_NAME;
 
 import java.io.File;
@@ -12,6 +11,8 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import org.hibernate.validator.constraints.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.thinkhr.external.api.ApplicationConstants;
 import com.thinkhr.external.api.db.entities.Company;
 import com.thinkhr.external.api.exception.APIErrorCodes;
 import com.thinkhr.external.api.exception.ApplicationException;
@@ -34,6 +36,7 @@ import com.thinkhr.external.api.exception.MessageResourceHandler;
 import com.thinkhr.external.api.model.FileImportResult;
 import com.thinkhr.external.api.services.CompanyService;
 import com.thinkhr.external.api.services.utils.FileImportUtil;
+
 
 /**
  * Company Controller for performing operations
@@ -49,11 +52,14 @@ import com.thinkhr.external.api.services.utils.FileImportUtil;
 @RequestMapping(path="/v1/companies")
 public class CompanyController {
 	
+	private Logger logger = LoggerFactory.getLogger(CompanyController.class);
+	
     @Autowired
     CompanyService companyService;
-
+    
     @Autowired
     MessageResourceHandler resourceHandler;
+
     /**
      * List all companies from repository
      * 
@@ -85,11 +91,7 @@ public class CompanyController {
     @RequestMapping(method=RequestMethod.GET, value="/{companyId}")
     public Company getById(@PathVariable(name="companyId", value = "companyId") Integer companyId) 
     		throws ApplicationException {
-        Company company = companyService.getCompany(companyId);
-        if (null == company) {
-        	throw ApplicationException.createEntityNotFoundError(APIErrorCodes.ENTITY_NOT_FOUND, "company", "companyId="+ companyId);
-        }
-        return company;
+        return companyService.getCompany(companyId);
     }
     
     
@@ -130,29 +132,34 @@ public class CompanyController {
    	public ResponseEntity<Company> addCompany(@Valid @RequestBody Company company) throws ApplicationException {
     	companyService.addCompany(company);
         return new ResponseEntity<Company>(company, HttpStatus.CREATED);
-    }
-
+   	}
+    
     /**
-     * Upload a file and import data from the file into table for company entity
+     * Bulk import company records from a given CSV file.
      * 
-     * @param Multipart file
-     * @throws IOException 
+     * @param Multipart file CSV files with records
+     * @param brokerId - brokerId from request. Originally retrieved as part of JWT token
+     * 
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<InputStreamResource> importFile(@RequestParam("file") MultipartFile file,
-            @RequestParam(value = "brokerId", required = false, defaultValue = DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId)
+    @RequestMapping(method=RequestMethod.POST,  value="/bulk", produces="application/csv")
+    public ResponseEntity <InputStreamResource> bulkUploadFile(@RequestParam(value="file", required=false) MultipartFile file, 
+    		@RequestParam(value = "brokerId", required = false, 
+            			  defaultValue = ApplicationConstants.DEFAULT_BROKERID_FOR_FILE_IMPORT) Integer brokerId )
             throws ApplicationException, IOException {
-
-        FileImportResult fileImportResult = companyService.importFile(file, brokerId);
-
-        // Set the attachment header.
+     
+    	logger.info("##### ######### COMPANY IMPORT BEGINS ######### #####");
+        FileImportResult fileImportResult = companyService.bulkUpload(file, brokerId);
+        logger.debug("************** COMPANY IMPORT ENDS *****************");
+        
+        // Set the attachment header & set up response to return a CSV file with result and erroneous records
+        // This response CSV file can be used by users to resubmit records after fixing them.
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-disposition", "attachment;filename=fileImportResult.csv");
+        headers.add("Content-disposition", "attachment;filename=companiesImportResult.csv");
 
         File responseFile = FileImportUtil.createReponseFile(fileImportResult, resourceHandler);
 
-        return ResponseEntity.ok().headers(headers).contentLength(responseFile.length()).contentType(MediaType.parseMediaType("text/csv"))
+        return ResponseEntity.ok().headers(headers)
                 .body(new InputStreamResource(new FileInputStream(responseFile)));
     }
-
+   
 }
