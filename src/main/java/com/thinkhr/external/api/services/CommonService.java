@@ -31,38 +31,40 @@ public class CommonService {
 
     @Autowired
     protected FileDataRepository fileDataRepository;
-    
+
     @Autowired
     protected MessageResourceHandler resourceHandler;
-    
+
     @Autowired
     protected CustomFieldsRepository customFieldRepository;
-    
+
     @Autowired
     protected CompanyRepository companyRepository;
 
 
-	/**
-	 * @return
-	 */
-	public String getDefaultSortField()  {
-    	return null;
+    /**
+     * @return
+     */
+    public String getDefaultSortField()  {
+        return null;
     }
-	
+
     /**
      * This function returns a map of custom fields to customFieldDisplayLabel(Header in CSV)
      * map by looking up into app_throne_custom_fields table
      * 
+     * @param id
+     * @param customFieldType
      * @return Map<String,String> 
      */
-    protected Map<String, String> getCustomFieldsMap(int id) {
-        
-        List<CustomFields> list = customFieldRepository.findByCompanyId(id);
-        
+    protected Map<String, String> getCustomFieldsMap(int id, String customFieldType) {
+
+        List<CustomFields> list = customFieldRepository.findByCompanyIdAndCustomFieldType(id, customFieldType);
+
         if (list == null || list.isEmpty()) {
             return null;
         }
-        
+
         Map<String, String> customFieldsToHeaderMap = new LinkedHashMap<String, String>();
         for (CustomFields customField : list) {
             String customFieldName = "custom" + customField.getCustomFieldColumnName();
@@ -70,8 +72,8 @@ public class CommonService {
         }
         return customFieldsToHeaderMap;
     }
-    
-   
+
+
     /**
      * Validate and get broker for given brokerId
      * 
@@ -82,11 +84,11 @@ public class CommonService {
         // Process files if submitted by a valid broker else throw an exception
         Company broker = companyRepository.findOne(brokerId);
         if (null == broker) {
-              throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_BROKER_ID, String.valueOf(brokerId));
+            throw ApplicationException.createFileImportError(APIErrorCodes.INVALID_BROKER_ID, String.valueOf(brokerId));
         }
-        
+
         return broker;
     }
-	
-	
+
+
 }

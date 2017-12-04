@@ -65,7 +65,7 @@ public class FileImportValidator {
             throw ApplicationException.createFileImportError(APIErrorCodes.NO_RECORDS_FOUND_FOR_IMPORT, fileName);
         }
 
-        if (fileContents.size() > MAX_RECORDS_COMPANY_CSV_IMPORT) {
+        if (fileContents.size() - 1 > MAX_RECORDS_COMPANY_CSV_IMPORT) {
             throw ApplicationException.createFileImportError(APIErrorCodes.MAX_RECORD_EXCEEDED,
                     String.valueOf(MAX_RECORDS_COMPANY_CSV_IMPORT));
         }
